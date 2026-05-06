@@ -5,7 +5,34 @@ This template should help get you started developing with Vue 3 and TypeScript i
 Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
 
 
-## Project Setup
+## Add docker-compose.yml at root
+
+```
+root/
+ kubereats-frontend/
+ kubereats-backend/
+ docker-compose.yml
+
+
+```
+
+```
+services:
+  frontend:
+    build:
+      context: ./kubereats-frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./kubereats-frontend:/app
+      - /app/node_modules
+
+```
+
+## Run with Docker
+
+Build and start the frontend:
 
 ```sh
 docker compose up --build
