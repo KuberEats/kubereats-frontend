@@ -1,5 +1,6 @@
 export type Campus = '竹科' | '南科' | '中科' | '高科'
 export type SortKey = 'people' | 'popular' | 'recommend'
+export type OrderHistorySortKey = 'time' | 'merchant'
 
 export interface Merchant {
   id: number

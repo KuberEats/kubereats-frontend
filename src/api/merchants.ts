@@ -4,9 +4,12 @@ import type { Campus, MenuItem, Merchant, SortKey } from './types'
 export function listMerchants(campus: Campus, date: string, sortBy: SortKey) {
   const params = new URLSearchParams({
     campus,
-    date,
     sort_by: sortBy,
   })
+
+  if (date) {
+    params.set('date', date)
+  }
 
   return apiRequest<Merchant[]>(`/merchants?${params.toString()}`)
 }

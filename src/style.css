@@ -157,6 +157,8 @@ h3 {
 }
 
 .hero-panel,
+.history-header,
+.history-order-row,
 .merchant-detail-hero,
 .content-panel,
 .cart-panel {
@@ -192,6 +194,10 @@ h3 {
 
 .filter-bar {
   padding: 18px 0;
+}
+
+.filter-bar.compact {
+  padding: 0;
 }
 
 .merchant-list {
@@ -407,6 +413,60 @@ h3 {
   margin-top: 18px;
 }
 
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 8px;
+  padding: 22px;
+}
+
+.history-header p:last-child {
+  margin-top: 6px;
+  color: #6b7280;
+}
+
+.history-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding-bottom: 48px;
+}
+
+.history-order-row {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.history-order-row:hover {
+  border-color: #f97316;
+  transform: translateY(-1px);
+}
+
+.history-order-main,
+.history-order-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.history-order-meta {
+  flex-wrap: wrap;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.history-order-meta strong {
+  color: #c2410c;
+  font-size: 18px;
+}
+
 .status-badge {
   border-radius: 999px;
   background: #ecfdf5;
@@ -428,7 +488,9 @@ h3 {
 
 @media (max-width: 800px) {
   .app-topbar,
-  .page-header {
+  .page-header,
+  .history-header,
+  .history-order-main {
     align-items: stretch;
     flex-direction: column;
   }

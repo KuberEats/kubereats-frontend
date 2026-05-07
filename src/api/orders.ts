@@ -1,5 +1,5 @@
 import { apiRequest } from './client'
-import type { CartItem, Order } from './types'
+import type { CartItem, Order, OrderHistorySortKey } from './types'
 
 export function createOrder(userId: number, items: CartItem[]) {
   return apiRequest<Order>('/orders', {
@@ -12,6 +12,15 @@ export function createOrder(userId: number, items: CartItem[]) {
       })),
     }),
   })
+}
+
+export function listOrders(userId: number, sortBy: OrderHistorySortKey) {
+  const params = new URLSearchParams({
+    userId: String(userId),
+    sortBy,
+  })
+
+  return apiRequest<Order[]>(`/orders?${params.toString()}`)
 }
 
 export function getOrderById(orderId: number) {

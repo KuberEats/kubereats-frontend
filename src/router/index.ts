@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-type RouteName = 'merchant-list' | 'merchant-detail' | 'order-detail'
+type RouteName = 'merchant-list' | 'merchant-detail' | 'order-history' | 'order-detail'
 
 interface AppRoute {
   name: RouteName
@@ -12,6 +12,9 @@ interface AppRoute {
 
 const currentPath = ref(window.location.pathname === '/' ? '/merchants' : window.location.pathname)
 
+// / 會被當成 /merchants
+// /merchants/:id 解析成 merchant-detail
+// /orders/:id 解析成 order-detail
 function parseRoute(path: string): AppRoute {
   const merchantDetailMatch = path.match(/^\/merchants\/(\d+)$/)
   if (merchantDetailMatch) {
@@ -26,6 +29,13 @@ function parseRoute(path: string): AppRoute {
     return {
       name: 'order-detail',
       params: { orderId: Number(orderDetailMatch[1]) },
+    }
+  }
+
+  if (path === '/orders') {
+    return {
+      name: 'order-history',
+      params: {},
     }
   }
 
