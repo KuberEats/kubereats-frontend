@@ -354,7 +354,8 @@ h3 {
 
 .menu-item-card p,
 .cart-row span,
-.order-item-row span {
+.order-item-row span,
+.cart-error span {
   display: block;
   margin-top: 4px;
   color: #6b7280;
@@ -407,6 +408,22 @@ h3 {
   border-radius: 999px;
   background: #ffffff;
   color: #111827;
+}
+
+.cart-error {
+  margin-top: 16px;
+  border-left: 4px solid #dc2626;
+  border-radius: 8px;
+  background: #fef2f2;
+  padding: 12px 14px;
+}
+
+.cart-error strong {
+  color: #991b1b;
+}
+
+.cart-error span {
+  color: #7f1d1d;
 }
 
 .order-detail {

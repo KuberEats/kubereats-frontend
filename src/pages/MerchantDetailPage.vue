@@ -16,7 +16,8 @@ const menuItems = ref<MenuItem[]>([])
 const cartItems = ref<CartItem[]>([])
 const isLoading = ref(false)
 const isSubmitting = ref(false)
-const errorMessage = ref('')
+const loadErrorMessage = ref('')
+const orderErrorMessage = ref('')
 
 const cartTotal = computed(() =>
   cartItems.value.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0),
@@ -26,7 +27,8 @@ async function fetchMerchantDetail() {
   if (!props.merchantId) return
 
   isLoading.value = true
-  errorMessage.value = ''
+  loadErrorMessage.value = ''
+  orderErrorMessage.value = ''
 
   try {
     const [merchantData, menuData] = await Promise.all([
@@ -37,13 +39,14 @@ async function fetchMerchantDetail() {
     menuItems.value = menuData
     cartItems.value = []
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '商家資料讀取失敗'
+    loadErrorMessage.value = error instanceof Error ? error.message : '商家資料讀取失敗'
   } finally {
     isLoading.value = false
   }
 }
 
 function addToCart(menuItem: MenuItem) {
+  orderErrorMessage.value = ''
   const existingItem = cartItems.value.find(item => item.menuItem.id === menuItem.id)
 
   if (existingItem) {
@@ -55,11 +58,13 @@ function addToCart(menuItem: MenuItem) {
 }
 
 function increaseQuantity(menuId: number) {
+  orderErrorMessage.value = ''
   const item = cartItems.value.find(cartItem => cartItem.menuItem.id === menuId)
   if (item) item.quantity += 1
 }
 
 function decreaseQuantity(menuId: number) {
+  orderErrorMessage.value = ''
   const item = cartItems.value.find(cartItem => cartItem.menuItem.id === menuId)
   if (!item) return
 
@@ -73,16 +78,33 @@ function decreaseQuantity(menuId: number) {
 
 async function submitOrder() {
   isSubmitting.value = true
-  errorMessage.value = ''
+  orderErrorMessage.value = ''
 
   try {
     const order = await createOrder(1, cartItems.value)
     navigateTo(`/orders/${order.id}`)
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '訂單建立失敗'
+    orderErrorMessage.value = formatOrderError(
+      error instanceof Error ? error.message : '訂單建立失敗',
+    )
   } finally {
     isSubmitting.value = false
   }
+}
+
+function formatOrderError(message: string) {
+  const quantityMatch = message.match(/^(.+) exceeds (?:daily available|remaining daily) quantity$/)
+
+  if (quantityMatch) {
+    return `${quantityMatch[1]} 今日可訂數量不足，請減少份數後再送出。`
+  }
+
+  if (message.includes('minimum order is')) {
+    const [merchantName, minimumAmount] = message.split(' minimum order is ')
+    return `${merchantName} 尚未達到低消 $${minimumAmount}。`
+  }
+
+  return message || '訂單建立失敗，請稍後再試。'
 }
 
 onMounted(fetchMerchantDetail)
@@ -95,8 +117,8 @@ watch(() => props.merchantId, fetchMerchantDetail)
       ← 返回商家
     </button>
 
-    <p v-if="errorMessage" class="status-message error">
-      {{ errorMessage }}
+    <p v-if="loadErrorMessage" class="status-message error">
+      {{ loadErrorMessage }}
     </p>
 
     <p v-else-if="isLoading" class="status-message">
@@ -149,6 +171,7 @@ watch(() => props.merchantId, fetchMerchantDetail)
         <CartPanel
           :items="cartItems"
           :submitting="isSubmitting"
+          :error-message="orderErrorMessage"
           @increase="increaseQuantity"
           @decrease="decreaseQuantity"
           @submit="submitOrder"

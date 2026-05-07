@@ -5,6 +5,7 @@ import type { CartItem } from '../api/types'
 const props = defineProps<{
   items: CartItem[]
   submitting: boolean
+  errorMessage?: string
 }>()
 
 defineEmits<{
@@ -45,6 +46,11 @@ const total = computed(() =>
           <button type="button" @click="$emit('increase', item.menuItem.id)">+</button>
         </div>
       </div>
+    </div>
+
+    <div v-if="errorMessage" class="cart-error" role="alert">
+      <strong>訂單無法送出</strong>
+      <span>{{ errorMessage }}</span>
     </div>
 
     <button
