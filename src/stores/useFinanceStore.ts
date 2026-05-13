@@ -9,8 +9,18 @@ export const useFinanceStore = defineStore('finance', {
     expenses: { total_expense: 0, order_count: 0 },
     salaryDeductions: [],
     history: [],
+    userTags: [],
+    barcodeImage: '',
   }),
   actions: {
+    async generateBarcode(userId: number) {
+      const res = await api.post(`/tagging/generate-barcode/${userId}`)
+      this.barcodeImage = res.data.barcode_base64
+    },
+    async fetchUserTags(userId: number) {
+      const res = await api.get(`/tagging/user/${userId}`)
+      this.userTags = res.data.tags
+    },
     async fetchMerchantIncome(merchantId: number) {
       const res = await api.get(`/merchant/income-status?merchant_id=${merchantId}`)
       this.incomeStatus = res.data

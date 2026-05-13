@@ -8,12 +8,33 @@ const userId = 1; // Default for local dev
 onMounted(() => {
   store.fetchStaffExpenses(userId);
   store.fetchSalaryDeductions(userId);
+  store.fetchUserTags(userId);
 });
+
+const generateTag = () => {
+  store.generateBarcode(userId);
+};
 </script>
 
 <template>
   <div class="space-y-6">
-    <h1 class="text-3xl font-bold">Staff Dashboard</h1>
+    <div class="flex justify-between items-center">
+      <h1 class="text-3xl font-bold">Staff Dashboard</h1>
+      <div class="flex items-center gap-4">
+        <div class="flex gap-2">
+          <div v-for="tag in store.userTags" :key="tag" class="badge badge-primary badge-outline">{{ tag }}</div>
+        </div>
+        <button class="btn btn-primary" @click="generateTag">Generate Tag</button>
+      </div>
+    </div>
+
+    <div v-if="store.barcodeImage" class="card bg-base-100 shadow-xl max-w-sm mx-auto">
+      <div class="card-body items-center text-center">
+        <h2 class="card-title text-sm opacity-50 uppercase tracking-widest">Staff Identity Tag</h2>
+        <img :src="store.barcodeImage" alt="Staff Barcode" class="mt-4" />
+        <p class="text-xs mt-2 font-mono">STAFF-{{ userId.toString().padStart(3, '0') }}</p>
+      </div>
+    </div>
     
     <div class="stats shadow w-full bg-base-100">
       <div class="stat">
