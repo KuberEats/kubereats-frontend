@@ -1,4 +1,3 @@
-# you should use node_modules in docker not to copy it to the image, because it will be generated in the container when you run npm install
 node_modules
 dist
 .git

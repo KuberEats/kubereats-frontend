@@ -1,8 +1,13 @@
-# Vue 3 + TypeScript + Vite
+# KuberEats Frontend
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Tech Stack
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+- **Framework**: Vue 3 + TypeScript
+- **Build Tool**: Vite
+- **Router**: Hand-written (no Vue Router)
+- **HTTP Client**: Native fetch wrapper (no Axios)
+- **UI**: Custom CSS (no UI framework)
+
 
 
 ## Add docker-compose.yml at root
@@ -37,3 +42,4 @@ Build and start the frontend:
 ```sh
 docker compose up --build
 ```
+

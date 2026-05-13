@@ -1,6 +1,15 @@
 import { computed, ref } from 'vue'
 
-type RouteName = 'merchant-list' | 'merchant-detail' | 'order-history' | 'order-detail'
+export type RouteName =
+  | 'login'
+  | 'merchant-apply'
+  | 'merchant-dashboard'
+  | 'merchant-orders'
+  | 'committee-review'
+  | 'merchant-list'
+  | 'merchant-detail'
+  | 'order-history'
+  | 'order-detail'
 
 interface AppRoute {
   name: RouteName
@@ -10,12 +19,24 @@ interface AppRoute {
   }
 }
 
-const currentPath = ref(window.location.pathname === '/' ? '/merchants' : window.location.pathname)
+const currentPath = ref(window.location.pathname)
 
-// / 會被當成 /merchants
-// /merchants/:id 解析成 merchant-detail
-// /orders/:id 解析成 order-detail
 function parseRoute(path: string): AppRoute {
+  // 你的路由
+  if (path === '/merchant/apply') {
+    return { name: 'merchant-apply', params: {} }
+  }
+  if (path === '/merchant/dashboard') {
+    return { name: 'merchant-dashboard', params: {} }
+  }
+  if (path === '/merchant/orders') {
+    return { name: 'merchant-orders', params: {} }
+  }
+  if (path === '/committee/review') {
+    return { name: 'committee-review', params: {} }
+  }
+
+  // 組員的路由
   const merchantDetailMatch = path.match(/^\/merchants\/(\d+)$/)
   if (merchantDetailMatch) {
     return {
@@ -32,17 +53,15 @@ function parseRoute(path: string): AppRoute {
     }
   }
 
+  if (path === '/merchants') {
+    return { name: 'merchant-list', params: {} }
+  }
   if (path === '/orders') {
-    return {
-      name: 'order-history',
-      params: {},
-    }
+    return { name: 'order-history', params: {} }
   }
 
-  return {
-    name: 'merchant-list',
-    params: {},
-  }
+  // 預設回登入頁
+  return { name: 'login', params: {} }
 }
 
 export const currentRoute = computed(() => parseRoute(currentPath.value))
