@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { getMerchantDetail, listMenuItems } from '../api/merchants'
+import { getMerchantDetail, listMerchantMenuItems } from '../api/merchants'
 import { createOrder } from '../api/orders'
 import type { CartItem, MenuItem, Merchant } from '../api/types'
 import CartPanel from '../components/CartPanel.vue'
@@ -33,7 +33,7 @@ async function fetchMerchantDetail() {
   try {
     const [merchantData, menuData] = await Promise.all([
       getMerchantDetail(props.merchantId),
-      listMenuItems(props.merchantId),
+      listMerchantMenuItems(props.merchantId),
     ])
     merchant.value = merchantData
     menuItems.value = menuData
