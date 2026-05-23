@@ -35,23 +35,61 @@ function handleLogout() {
 
 <template>
   <div class="app-shell">
-    <header v-if="isLoggedIn" class="app-topbar">
-      <button class="brand-button" type="button" @click="navigateTo('/')">
+    <header
+      v-if="isLoggedIn"
+      class="app-topbar"
+    >
+      <button
+        class="brand-button"
+        type="button"
+        @click="navigateTo('/')"
+      >
         KuberEats
       </button>
       <nav class="topbar-actions">
         <template v-if="userRole === 'employee'">
-          <button type="button" @click="navigateTo('/merchants')">商家</button>
-          <button type="button" @click="navigateTo('/orders')">歷史訂單</button>
+          <button
+            type="button"
+            @click="navigateTo('/merchants')"
+          >
+            商家
+          </button>
+          <button
+            type="button"
+            @click="navigateTo('/orders')"
+          >
+            歷史訂單
+          </button>
         </template>
         <template v-if="userRole === 'merchant'">
-          <button type="button" @click="navigateTo('/merchant/dashboard')">商家後台</button>
-          <button type="button" @click="navigateTo('/merchant/orders')">今日訂單</button>
+          <button
+            type="button"
+            @click="navigateTo('/merchant/dashboard')"
+          >
+            商家後台
+          </button>
+          <button
+            type="button"
+            @click="navigateTo('/merchant/orders')"
+          >
+            今日訂單
+          </button>
         </template>
         <template v-if="userRole === 'committee'">
-          <button type="button" @click="navigateTo('/committee/review')">商家審核</button>
+          <button
+            type="button"
+            @click="navigateTo('/committee/review')"
+          >
+            商家審核
+          </button>
         </template>
-        <button type="button" class="logout-btn" @click="handleLogout">登出</button>
+        <button
+          type="button"
+          class="logout-btn"
+          @click="handleLogout"
+        >
+          登出
+        </button>
       </nav>
     </header>
 

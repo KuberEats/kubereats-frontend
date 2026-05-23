@@ -81,7 +81,12 @@ async function handleDeleteItem(menuId: number) {
 
 <template>
   <div class="page-container">
-    <div v-if="loading" class="loading">載入中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      載入中...
+    </div>
 
     <template v-else-if="merchant">
       <div class="merchant-info card">
@@ -92,52 +97,125 @@ async function handleDeleteItem(menuId: number) {
           <span>配送時間：{{ merchant.deliveryTime }}</span>
           <span>最低訂購：${{ merchant.minOrder }}</span>
           <span>最多訂購數量：{{ merchant.maxOrderQuantity === 0 ? '不限' : merchant.maxOrderQuantity }}</span>
-          <span class="status" :class="'status-' + merchant.auditStatus">
+          <span
+            class="status"
+            :class="'status-' + merchant.auditStatus"
+          >
             狀態：{{ auditStatusText[merchant.auditStatus] ?? '未知' }}
           </span>
         </div>
-        <div v-if="merchant.tags.length" class="tags">
-          <span v-for="tag in merchant.tags" :key="tag" class="tag">{{ tag }}</span>
+        <div
+          v-if="merchant.tags.length"
+          class="tags"
+        >
+          <span
+            v-for="tag in merchant.tags"
+            :key="tag"
+            class="tag"
+          >{{ tag }}</span>
         </div>
       </div>
 
-      <div v-if="merchant.auditStatus === 0" class="notice">
+      <div
+        v-if="merchant.auditStatus === 0"
+        class="notice"
+      >
         您的申請正在審核中，通過後即可管理菜單。
       </div>
-      <div v-else-if="merchant.auditStatus === 2" class="notice error-notice">
+      <div
+        v-else-if="merchant.auditStatus === 2"
+        class="notice error-notice"
+      >
         您的申請已被拒絕，請聯繫福委會了解詳情。
       </div>
 
       <template v-if="merchant.auditStatus === 1">
         <div class="section-header">
           <h3>菜單管理</h3>
-          <button class="btn-small" @click="showAddForm = !showAddForm">
+          <button
+            class="btn-small"
+            @click="showAddForm = !showAddForm"
+          >
             {{ showAddForm ? '取消' : '+ 新增菜品' }}
           </button>
-          <button class="btn-small btn-secondary" @click="navigateTo('/merchant/orders')">
+          <button
+            class="btn-small btn-secondary"
+            @click="navigateTo('/merchant/orders')"
+          >
             查看今日訂單
           </button>
         </div>
 
-        <div v-if="showAddForm" class="card add-form">
+        <div
+          v-if="showAddForm"
+          class="card add-form"
+        >
           <div class="form-row">
-            <input v-model="newItem.itemName" placeholder="品名" />
-            <input v-model.number="newItem.price" type="number" placeholder="價格" min="1" />
-            <input v-model.number="newItem.maxDailyQuantity" type="number" placeholder="每日限量" min="1" />
-            <button class="btn-primary btn-small" @click="handleAddItem">新增</button>
+            <input
+              v-model="newItem.itemName"
+              placeholder="品名"
+            >
+            <input
+              v-model.number="newItem.price"
+              type="number"
+              placeholder="價格"
+              min="1"
+            >
+            <input
+              v-model.number="newItem.maxDailyQuantity"
+              type="number"
+              placeholder="每日限量"
+              min="1"
+            >
+            <button
+              class="btn-primary btn-small"
+              @click="handleAddItem"
+            >
+              新增
+            </button>
           </div>
         </div>
 
-        <div v-if="menuItems.length === 0" class="notice">尚未新增任何菜品</div>
+        <div
+          v-if="menuItems.length === 0"
+          class="notice"
+        >
+          尚未新增任何菜品
+        </div>
 
-        <div v-for="item in menuItems" :key="item.id" class="card menu-item">
+        <div
+          v-for="item in menuItems"
+          :key="item.id"
+          class="card menu-item"
+        >
           <template v-if="editingId === item.id">
             <div class="form-row">
-              <input v-model="editItem.itemName" placeholder="品名" />
-              <input v-model.number="editItem.price" type="number" placeholder="價格" />
-              <input v-model.number="editItem.maxDailyQuantity" type="number" placeholder="每日限量" />
-              <button class="btn-small btn-primary" @click="handleUpdateItem(item.id)">儲存</button>
-              <button class="btn-small" @click="editingId = null">取消</button>
+              <input
+                v-model="editItem.itemName"
+                placeholder="品名"
+              >
+              <input
+                v-model.number="editItem.price"
+                type="number"
+                placeholder="價格"
+              >
+              <input
+                v-model.number="editItem.maxDailyQuantity"
+                type="number"
+                placeholder="每日限量"
+              >
+              <button
+                class="btn-small btn-primary"
+                @click="handleUpdateItem(item.id)"
+              >
+                儲存
+              </button>
+              <button
+                class="btn-small"
+                @click="editingId = null"
+              >
+                取消
+              </button>
             </div>
           </template>
           <template v-else>
@@ -147,15 +225,30 @@ async function handleDeleteItem(menuId: number) {
               <span>每日限量 {{ item.maxDailyQuantity }} 份</span>
             </div>
             <div class="menu-item-actions">
-              <button class="btn-small" @click="startEdit(item)">編輯</button>
-              <button class="btn-small btn-danger" @click="handleDeleteItem(item.id)">刪除</button>
+              <button
+                class="btn-small"
+                @click="startEdit(item)"
+              >
+                編輯
+              </button>
+              <button
+                class="btn-small btn-danger"
+                @click="handleDeleteItem(item.id)"
+              >
+                刪除
+              </button>
             </div>
           </template>
         </div>
       </template>
     </template>
 
-    <p v-if="error" class="error-text">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error-text"
+    >
+      {{ error }}
+    </p>
   </div>
 </template>
 

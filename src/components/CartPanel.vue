@@ -23,32 +23,58 @@ const total = computed(() =>
   <aside class="cart-panel">
     <div class="section-title-row">
       <div>
-        <p class="eyebrow">Cart</p>
+        <p class="eyebrow">
+          Cart
+        </p>
         <h2>購物車</h2>
       </div>
       <strong>${{ total }}</strong>
     </div>
 
-    <div v-if="items.length === 0" class="empty-box">
+    <div
+      v-if="items.length === 0"
+      class="empty-box"
+    >
       尚未選擇餐點。
     </div>
 
-    <div v-else class="cart-list">
-      <div v-for="item in items" :key="item.menuItem.id" class="cart-row">
+    <div
+      v-else
+      class="cart-list"
+    >
+      <div
+        v-for="item in items"
+        :key="item.menuItem.id"
+        class="cart-row"
+      >
         <div>
           <strong>{{ item.menuItem.itemName }}</strong>
           <span>${{ item.menuItem.price }} × {{ item.quantity }}</span>
         </div>
 
         <div class="quantity-control">
-          <button type="button" @click="$emit('decrease', item.menuItem.id)">−</button>
+          <button
+            type="button"
+            @click="$emit('decrease', item.menuItem.id)"
+          >
+            −
+          </button>
           <span>{{ item.quantity }}</span>
-          <button type="button" @click="$emit('increase', item.menuItem.id)">+</button>
+          <button
+            type="button"
+            @click="$emit('increase', item.menuItem.id)"
+          >
+            +
+          </button>
         </div>
       </div>
     </div>
 
-    <div v-if="errorMessage" class="cart-error" role="alert">
+    <div
+      v-if="errorMessage"
+      class="cart-error"
+      role="alert"
+    >
       <strong>訂單無法送出</strong>
       <span>{{ errorMessage }}</span>
     </div>

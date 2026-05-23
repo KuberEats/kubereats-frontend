@@ -75,17 +75,35 @@ onMounted(loadMerchants)
       </button>
     </div>
 
-    <div v-if="loading" class="loading">載入中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      載入中...
+    </div>
 
-    <div v-else-if="merchants.length === 0" class="notice">
+    <div
+      v-else-if="merchants.length === 0"
+      class="notice"
+    >
       {{ tab === 'pending' ? '目前沒有待審核的商家' : '目前沒有任何商家' }}
     </div>
 
-    <div v-else class="merchant-list">
-      <div v-for="m in merchants" :key="m.id" class="card merchant-card">
+    <div
+      v-else
+      class="merchant-list"
+    >
+      <div
+        v-for="m in merchants"
+        :key="m.id"
+        class="card merchant-card"
+      >
         <div class="merchant-header">
           <h3>{{ m.merchantName }}</h3>
-          <span class="status" :class="'status-' + m.auditStatus">
+          <span
+            class="status"
+            :class="'status-' + m.auditStatus"
+          >
             {{ auditStatusText[m.auditStatus] ?? '未知' }}
           </span>
         </div>
@@ -96,17 +114,42 @@ onMounted(loadMerchants)
           <span>最低訂購：${{ m.minOrder }}</span>
           <span>最多訂購數量：{{ m.maxOrderQuantity === 0 ? '不限' : m.maxOrderQuantity }}</span>
         </div>
-        <div v-if="m.tags.length" class="tags">
-          <span v-for="tag in m.tags" :key="tag" class="tag">{{ tag }}</span>
+        <div
+          v-if="m.tags.length"
+          class="tags"
+        >
+          <span
+            v-for="tag in m.tags"
+            :key="tag"
+            class="tag"
+          >{{ tag }}</span>
         </div>
-        <div v-if="m.auditStatus === 0" class="action-buttons">
-          <button class="btn-approve" @click="handleApprove(m.id)">通過</button>
-          <button class="btn-reject" @click="handleReject(m.id)">拒絕</button>
+        <div
+          v-if="m.auditStatus === 0"
+          class="action-buttons"
+        >
+          <button
+            class="btn-approve"
+            @click="handleApprove(m.id)"
+          >
+            通過
+          </button>
+          <button
+            class="btn-reject"
+            @click="handleReject(m.id)"
+          >
+            拒絕
+          </button>
         </div>
       </div>
     </div>
 
-    <p v-if="error" class="error-text">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error-text"
+    >
+      {{ error }}
+    </p>
   </div>
 </template>
 

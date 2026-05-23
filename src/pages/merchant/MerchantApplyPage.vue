@@ -36,43 +36,98 @@ async function handleSubmit() {
 <template>
   <div class="page-container">
     <h2>商家申請加入平台</h2>
-    <form class="apply-form" @submit.prevent="handleSubmit">
+    <form
+      class="apply-form"
+      @submit.prevent="handleSubmit"
+    >
       <div class="form-group">
         <label>商家名稱</label>
-        <input v-model="form.merchantName" type="text" required />
+        <input
+          v-model="form.merchantName"
+          type="text"
+          required
+        >
       </div>
       <div class="form-group">
         <label>廠區</label>
-        <select v-model="form.campus" required>
-          <option value="" disabled>請選擇廠區</option>
-          <option value="竹科">竹科</option>
-          <option value="南科">南科</option>
-          <option value="中科">中科</option>
-          <option value="高科">高科</option>
+        <select
+          v-model="form.campus"
+          required
+        >
+          <option
+            value=""
+            disabled
+          >
+            請選擇廠區
+          </option>
+          <option value="竹科">
+            竹科
+          </option>
+          <option value="南科">
+            南科
+          </option>
+          <option value="中科">
+            中科
+          </option>
+          <option value="高科">
+            高科
+          </option>
         </select>
       </div>
       <div class="form-group">
         <label>分類</label>
-        <input v-model="form.category" type="text" placeholder="例如：便當、麵食" required />
+        <input
+          v-model="form.category"
+          type="text"
+          placeholder="例如：便當、麵食"
+          required
+        >
       </div>
       <div class="form-group">
         <label>最低訂購金額</label>
-        <input v-model.number="form.minOrder" type="number" min="0" />
+        <input
+          v-model.number="form.minOrder"
+          type="number"
+          min="0"
+        >
       </div>
       <div class="form-group">
         <label>最多訂購數量</label>
-        <input v-model.number="form.maxOrderQuantity" type="number" min="0" placeholder="0 表示不限制" />
+        <input
+          v-model.number="form.maxOrderQuantity"
+          type="number"
+          min="0"
+          placeholder="0 表示不限制"
+        >
       </div>
       <div class="form-group">
         <label>配送時間</label>
-        <input v-model="form.deliveryTime" type="text" placeholder="例如：30分鐘" required />
+        <input
+          v-model="form.deliveryTime"
+          type="text"
+          placeholder="例如：30分鐘"
+          required
+        >
       </div>
       <div class="form-group">
         <label>標籤（逗號分隔）</label>
-        <input v-model="form.tags" type="text" placeholder="例如：便當, 台式, 健康" />
+        <input
+          v-model="form.tags"
+          type="text"
+          placeholder="例如：便當, 台式, 健康"
+        >
       </div>
-      <p v-if="error" class="error-text">{{ error }}</p>
-      <button type="submit" class="btn-primary" :disabled="loading">
+      <p
+        v-if="error"
+        class="error-text"
+      >
+        {{ error }}
+      </p>
+      <button
+        type="submit"
+        class="btn-primary"
+        :disabled="loading"
+      >
         {{ loading ? '送出中...' : '送出申請' }}
       </button>
     </form>

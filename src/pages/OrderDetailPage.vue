@@ -56,22 +56,37 @@ watch(() => props.orderId, fetchOrder)
 
 <template>
   <main class="page">
-    <button class="ghost-button" type="button" @click="navigateTo('/merchants')">
+    <button
+      class="ghost-button"
+      type="button"
+      @click="navigateTo('/merchants')"
+    >
       ← 返回商家
     </button>
 
-    <p v-if="errorMessage" class="status-message error">
+    <p
+      v-if="errorMessage"
+      class="status-message error"
+    >
       {{ errorMessage }}
     </p>
 
-    <p v-else-if="isLoading" class="status-message">
+    <p
+      v-else-if="isLoading"
+      class="status-message"
+    >
       訂單載入中。
     </p>
 
-    <section v-else-if="order" class="order-detail">
+    <section
+      v-else-if="order"
+      class="order-detail"
+    >
       <div class="section-title-row">
         <div>
-          <p class="eyebrow">Order #{{ order.id }}</p>
+          <p class="eyebrow">
+            Order #{{ order.id }}
+          </p>
           <h1>訂單詳情</h1>
         </div>
         <span class="status-badge">{{ statusLabel }}</span>
@@ -82,7 +97,11 @@ watch(() => props.orderId, fetchOrder)
           <h2>餐點明細</h2>
 
           <div class="order-item-list">
-            <div v-for="item in order.items" :key="item.id" class="order-item-row">
+            <div
+              v-for="item in order.items"
+              :key="item.id"
+              class="order-item-row"
+            >
               <div>
                 <strong>{{ item.itemName }}</strong>
                 <span>${{ item.unitPrice }} × {{ item.quantity }}</span>

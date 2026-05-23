@@ -11,7 +11,10 @@ defineEmits<{
 </script>
 
 <template>
-  <article class="merchant-card" @click="$emit('select', merchant.id)">
+  <article
+    class="merchant-card"
+    @click="$emit('select', merchant.id)"
+  >
     <div class="merchant-image">
       {{ merchant.name.slice(0, 1) }}
     </div>
@@ -33,7 +36,10 @@ defineEmits<{
       </div>
 
       <div class="tag-list">
-        <span v-for="tag in merchant.tags" :key="tag">
+        <span
+          v-for="tag in merchant.tags"
+          :key="tag"
+        >
           {{ tag }}
         </span>
       </div>
