@@ -113,15 +113,25 @@ watch(() => props.merchantId, fetchMerchantDetail)
 
 <template>
   <main class="page">
-    <button class="ghost-button" type="button" @click="navigateTo('/merchants')">
+    <button
+      class="ghost-button"
+      type="button"
+      @click="navigateTo('/merchants')"
+    >
       ← 返回商家
     </button>
 
-    <p v-if="loadErrorMessage" class="status-message error">
+    <p
+      v-if="loadErrorMessage"
+      class="status-message error"
+    >
       {{ loadErrorMessage }}
     </p>
 
-    <p v-else-if="isLoading" class="status-message">
+    <p
+      v-else-if="isLoading"
+      class="status-message"
+    >
       商家與菜單載入中。
     </p>
 
@@ -132,7 +142,9 @@ watch(() => props.merchantId, fetchMerchantDetail)
         </div>
 
         <div>
-          <p class="eyebrow">{{ merchant.campus }} · {{ merchant.category }}</p>
+          <p class="eyebrow">
+            {{ merchant.campus }} · {{ merchant.category }}
+          </p>
           <h1>{{ merchant.name }}</h1>
           <div class="merchant-meta">
             <span>★ {{ merchant.rating }}</span>
@@ -141,7 +153,10 @@ watch(() => props.merchantId, fetchMerchantDetail)
             <span>{{ merchant.deliveryTime }}</span>
           </div>
           <div class="tag-list">
-            <span v-for="tag in merchant.tags" :key="tag">
+            <span
+              v-for="tag in merchant.tags"
+              :key="tag"
+            >
               {{ tag }}
             </span>
           </div>
@@ -152,7 +167,9 @@ watch(() => props.merchantId, fetchMerchantDetail)
         <div class="menu-section">
           <div class="section-title-row">
             <div>
-              <p class="eyebrow">Menu</p>
+              <p class="eyebrow">
+                Menu
+              </p>
               <h2>今日菜單</h2>
             </div>
             <strong>${{ cartTotal }}</strong>

@@ -44,7 +44,10 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
 <template>
   <main class="page">
     <header class="page-header">
-      <nav class="campus-tabs" aria-label="園區分類">
+      <nav
+        class="campus-tabs"
+        aria-label="園區分類"
+      >
         <button
           v-for="campus in campuses"
           :key="campus"
@@ -59,19 +62,27 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
 
       <label class="date-picker">
         <span>日期</span>
-        <input v-model="selectedDate" type="date" />
+        <input
+          v-model="selectedDate"
+          type="date"
+        >
       </label>
     </header>
 
     <section class="hero-panel">
       <div>
-        <p class="eyebrow">KuberEats Order</p>
+        <p class="eyebrow">
+          KuberEats Order
+        </p>
         <h1>{{ selectedCampus }} 今日訂餐</h1>
         <p>選擇日期、園區與排序方式，快速找到今天適合團訂的店家。</p>
       </div>
     </section>
 
-    <section class="filter-bar" aria-label="排序篩選">
+    <section
+      class="filter-bar"
+      aria-label="排序篩選"
+    >
       <button
         v-for="option in sortOptions"
         :key="option.value"
@@ -84,15 +95,25 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
       </button>
     </section>
 
-    <p v-if="errorMessage" class="status-message error">
+    <p
+      v-if="errorMessage"
+      class="status-message error"
+    >
       {{ errorMessage }}
     </p>
 
-    <p v-else-if="isLoading" class="status-message">
+    <p
+      v-else-if="isLoading"
+      class="status-message"
+    >
       商家載入中。
     </p>
 
-    <section v-else class="merchant-list" aria-label="店家列表">
+    <section
+      v-else
+      class="merchant-list"
+      aria-label="店家列表"
+    >
       <MerchantCard
         v-for="merchant in merchants"
         :key="merchant.id"
@@ -100,7 +121,10 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
         @select="navigateTo(`/merchants/${$event}`)"
       />
 
-      <p v-if="merchants.length === 0" class="empty-state">
+      <p
+        v-if="merchants.length === 0"
+        class="empty-state"
+      >
         目前這個園區還沒有可訂店家。
       </p>
     </section>

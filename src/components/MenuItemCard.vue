@@ -18,7 +18,11 @@ defineEmits<{
       <strong>${{ item.price }}</strong>
     </div>
 
-    <button class="icon-text-button" type="button" @click="$emit('add', item)">
+    <button
+      class="icon-text-button"
+      type="button"
+      @click="$emit('add', item)"
+    >
       加入
     </button>
   </article>

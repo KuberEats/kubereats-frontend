@@ -56,33 +56,65 @@ async function handleSubmit() {
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>帳號</label>
-          <input v-model="username" type="text" placeholder="請輸入帳號" required />
+          <input
+            v-model="username"
+            type="text"
+            placeholder="請輸入帳號"
+            required
+          >
         </div>
 
         <div class="form-group">
           <label>密碼</label>
-          <input v-model="password" type="password" placeholder="請輸入密碼" required />
+          <input
+            v-model="password"
+            type="password"
+            placeholder="請輸入密碼"
+            required
+          >
         </div>
 
-        <div v-if="isRegister" class="form-group">
+        <div
+          v-if="isRegister"
+          class="form-group"
+        >
           <label>角色</label>
           <select v-model="role">
-            <option value="employee">員工</option>
-            <option value="merchant">商家</option>
-            <option value="committee">福委會</option>
+            <option value="employee">
+              員工
+            </option>
+            <option value="merchant">
+              商家
+            </option>
+            <option value="committee">
+              福委會
+            </option>
           </select>
         </div>
 
-        <p v-if="error" class="error-text">{{ error }}</p>
+        <p
+          v-if="error"
+          class="error-text"
+        >
+          {{ error }}
+        </p>
 
-        <button type="submit" class="btn-primary" :disabled="loading">
+        <button
+          type="submit"
+          class="btn-primary"
+          :disabled="loading"
+        >
           {{ loading ? '處理中...' : (isRegister ? '註冊' : '登入') }}
         </button>
       </form>
 
       <p class="toggle-text">
         {{ isRegister ? '已有帳號？' : '還沒有帳號？' }}
-        <button type="button" class="link-button" @click="isRegister = !isRegister">
+        <button
+          type="button"
+          class="link-button"
+          @click="isRegister = !isRegister"
+        >
           {{ isRegister ? '登入' : '註冊' }}
         </button>
       </p>

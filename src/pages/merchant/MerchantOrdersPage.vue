@@ -23,10 +23,20 @@ onMounted(async () => {
   <div class="page-container">
     <div class="section-header">
       <h2>今日訂單彙整</h2>
-      <button class="btn-small" @click="navigateTo('/merchant/dashboard')">← 返回</button>
+      <button
+        class="btn-small"
+        @click="navigateTo('/merchant/dashboard')"
+      >
+        ← 返回
+      </button>
     </div>
 
-    <div v-if="loading" class="loading">載入中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      載入中...
+    </div>
 
     <template v-else-if="summary">
       <div class="summary-card card">
@@ -46,9 +56,17 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="summary.items.length === 0" class="notice">今日尚無訂單</div>
+      <div
+        v-if="summary.items.length === 0"
+        class="notice"
+      >
+        今日尚無訂單
+      </div>
 
-      <table v-else class="orders-table">
+      <table
+        v-else
+        class="orders-table"
+      >
         <thead>
           <tr>
             <th>品項</th>
@@ -57,7 +75,10 @@ onMounted(async () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in summary.items" :key="item.menuId">
+          <tr
+            v-for="item in summary.items"
+            :key="item.menuId"
+          >
             <td>{{ item.itemName }}</td>
             <td>{{ item.totalQuantity }} 份</td>
             <td>${{ item.totalAmount }}</td>
@@ -66,7 +87,12 @@ onMounted(async () => {
       </table>
     </template>
 
-    <p v-if="error" class="error-text">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error-text"
+    >
+      {{ error }}
+    </p>
   </div>
 </template>
 

@@ -60,12 +60,17 @@ watch(selectedSort, fetchOrders)
   <main class="page">
     <section class="history-header">
       <div>
-        <p class="eyebrow">Order History</p>
+        <p class="eyebrow">
+          Order History
+        </p>
         <h1>歷史訂單</h1>
         <p>共 {{ orderCount }} 筆訂單</p>
       </div>
 
-      <div class="filter-bar compact" aria-label="歷史訂單排序">
+      <div
+        class="filter-bar compact"
+        aria-label="歷史訂單排序"
+      >
         <button
           v-for="option in sortOptions"
           :key="option.value"
@@ -79,15 +84,25 @@ watch(selectedSort, fetchOrders)
       </div>
     </section>
 
-    <p v-if="errorMessage" class="status-message error">
+    <p
+      v-if="errorMessage"
+      class="status-message error"
+    >
       {{ errorMessage }}
     </p>
 
-    <p v-else-if="isLoading" class="status-message">
+    <p
+      v-else-if="isLoading"
+      class="status-message"
+    >
       歷史訂單載入中。
     </p>
 
-    <section v-else class="history-list" aria-label="歷史訂單列表">
+    <section
+      v-else
+      class="history-list"
+      aria-label="歷史訂單列表"
+    >
       <article
         v-for="order in orders"
         :key="order.id"
@@ -96,7 +111,9 @@ watch(selectedSort, fetchOrders)
       >
         <div class="history-order-main">
           <div>
-            <p class="eyebrow">Order #{{ order.id }}</p>
+            <p class="eyebrow">
+              Order #{{ order.id }}
+            </p>
             <h2>{{ merchantNames(order) }}</h2>
           </div>
           <span class="status-badge">{{ statusLabel(order.orderStatus) }}</span>
@@ -109,7 +126,10 @@ watch(selectedSort, fetchOrders)
         </div>
       </article>
 
-      <p v-if="orders.length === 0" class="empty-state">
+      <p
+        v-if="orders.length === 0"
+        class="empty-state"
+      >
         目前還沒有歷史訂單。
       </p>
     </section>
