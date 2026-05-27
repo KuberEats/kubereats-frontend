@@ -6,6 +6,10 @@ import MerchantApplyPage from './pages/merchant/MerchantApplyPage.vue'
 import MerchantDashboardPage from './pages/merchant/MerchantDashboardPage.vue'
 import MerchantOrdersPage from './pages/merchant/MerchantOrdersPage.vue'
 import CommitteeReviewPage from './pages/committee/CommitteeReviewPage.vue'
+// finance / tagging 頁面
+import MerchantFinancePage from './pages/merchant/MerchantFinancePage.vue'
+import StaffExpensesPage from './pages/StaffExpensesPage.vue'
+import FinanceReportPage from './pages/committee/FinanceReportPage.vue'
 // 組員的頁面
 import MerchantDetailPage from './pages/MerchantDetailPage.vue'
 import MerchantListPage from './pages/MerchantListPage.vue'
@@ -15,9 +19,13 @@ import OrderHistoryPage from './pages/OrderHistoryPage.vue'
 import { currentRoute, navigateTo } from './router'
 import { clearTokens, getAccessToken } from './api/client'
 
-const isLoggedIn = computed(() => !!getAccessToken())
+const isLoggedIn = computed(() => {
+  void currentRoute.value // track route changes
+  return !!getAccessToken()
+})
 
 const userRole = computed(() => {
+  void currentRoute.value // track route changes so this re-evaluates on login/logout
   const user = localStorage.getItem('user')
   if (!user) return null
   try {
@@ -60,6 +68,12 @@ function handleLogout() {
           >
             歷史訂單
           </button>
+          <button
+            type="button"
+            @click="navigateTo('/staff/expenses')"
+          >
+            我的支出
+          </button>
         </template>
         <template v-if="userRole === 'merchant'">
           <button
@@ -100,6 +114,10 @@ function handleLogout() {
       <MerchantDashboardPage v-else-if="currentRoute.name === 'merchant-dashboard'" />
       <MerchantOrdersPage v-else-if="currentRoute.name === 'merchant-orders'" />
       <CommitteeReviewPage v-else-if="currentRoute.name === 'committee-review'" />
+      <!-- finance / tagging 頁面 -->
+      <MerchantFinancePage v-else-if="currentRoute.name === 'merchant-finance'" />
+      <StaffExpensesPage v-else-if="currentRoute.name === 'staff-expenses'" />
+      <FinanceReportPage v-else-if="currentRoute.name === 'merchant-finance-reports'" />
       <!-- 組員的頁面 -->
       <MerchantListPage v-else-if="currentRoute.name === 'merchant-list'" />
       <MerchantDetailPage

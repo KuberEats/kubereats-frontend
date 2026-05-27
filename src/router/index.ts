@@ -5,11 +5,14 @@ export type RouteName =
   | 'merchant-apply'
   | 'merchant-dashboard'
   | 'merchant-orders'
+  | 'merchant-finance'
+  | 'merchant-finance-reports'
   | 'committee-review'
   | 'merchant-list'
   | 'merchant-detail'
   | 'order-history'
   | 'order-detail'
+  | 'staff-expenses'
 
 interface AppRoute {
   name: RouteName
@@ -32,8 +35,17 @@ function parseRoute(path: string): AppRoute {
   if (path === '/merchant/orders') {
     return { name: 'merchant-orders', params: {} }
   }
+  if (path === '/merchant/finance') {
+    return { name: 'merchant-finance', params: {} }
+  }
+  if (path === '/merchant/finance-reports') {
+    return { name: 'merchant-finance-reports', params: {} }
+  }
   if (path === '/committee/review') {
     return { name: 'committee-review', params: {} }
+  }
+  if (path === '/staff/expenses') {
+    return { name: 'staff-expenses', params: {} }
   }
 
   // 組員的路由

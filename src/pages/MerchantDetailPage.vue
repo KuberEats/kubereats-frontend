@@ -81,7 +81,9 @@ async function submitOrder() {
   orderErrorMessage.value = ''
 
   try {
-    const order = await createOrder(1, cartItems.value)
+    const storedUser = localStorage.getItem('user')
+    const userId = storedUser ? (JSON.parse(storedUser) as { id: number }).id : 0
+    const order = await createOrder(userId, cartItems.value)
     navigateTo(`/orders/${order.id}`)
   } catch (error) {
     orderErrorMessage.value = formatOrderError(

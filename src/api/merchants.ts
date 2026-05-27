@@ -97,3 +97,9 @@ export function deleteMenuItem(menuId: number): Promise<void> {
 export function getTodayOrders(): Promise<TodayOrderSummary> {
   return apiRequest<TodayOrderSummary>('/merchants/orders/today')
 }
+
+export function confirmTodayOrders(): Promise<{ confirmed_count: number }> {
+  return apiRequest<{ confirmed_count: number }>('/merchants/orders/confirm-today', {
+    method: 'POST',
+  })
+}

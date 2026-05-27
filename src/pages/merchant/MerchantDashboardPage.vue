@@ -130,6 +130,23 @@ async function handleDeleteItem(menuId: number) {
       </div>
 
       <template v-if="merchant.auditStatus === 1">
+        <div class="finance-actions">
+          <button
+            class="finance-btn"
+            @click="navigateTo('/merchant/finance')"
+          >
+            <span class="finance-btn-icon">$</span>
+            <span>收入總覽</span>
+          </button>
+          <button
+            class="finance-btn"
+            @click="navigateTo('/merchant/finance-reports')"
+          >
+            <span class="finance-btn-icon">PDF</span>
+            <span>財務報表</span>
+          </button>
+        </div>
+
         <div class="section-header">
           <h3>菜單管理</h3>
           <button
@@ -280,5 +297,9 @@ async function handleDeleteItem(menuId: number) {
 .btn-secondary:hover { background: #2980b9; }
 .btn-danger { background: #e74c3c; color: white; border: none; }
 .btn-danger:hover { background: #c0392b; }
+.finance-actions { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.finance-btn { display: flex; align-items: center; gap: 0.75rem; flex: 1; padding: 1rem; background: white; border: 1px solid #eee; border-radius: 8px; cursor: pointer; font-size: 0.95rem; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: border-color 0.2s; }
+.finance-btn:hover { border-color: #f97316; }
+.finance-btn-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; color: #f97316; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
 </style>
