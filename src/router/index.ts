@@ -1,18 +1,88 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import MerchantDashboard from '../views/MerchantDashboard.vue'
-import StaffDashboard from '../views/StaffDashboard.vue'
-import FinanceReport from '../views/FinanceReport.vue'
+import { computed, ref } from 'vue'
 
-const routes = [
-  { path: '/', redirect: '/merchant' },
-  { path: '/merchant', name: 'Merchant', component: MerchantDashboard },
-  { path: '/staff', name: 'Staff', component: StaffDashboard },
-  { path: '/finance', name: 'Finance', component: FinanceReport },
-]
+export type RouteName =
+  | 'login'
+  | 'merchant-apply'
+  | 'merchant-dashboard'
+  | 'merchant-orders'
+  | 'merchant-finance'
+  | 'merchant-finance-reports'
+  | 'committee-review'
+  | 'merchant-list'
+  | 'merchant-detail'
+  | 'order-history'
+  | 'order-detail'
+  | 'staff-expenses'
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
+interface AppRoute {
+  name: RouteName
+  params: {
+    merchantId?: number
+    orderId?: number
+  }
+}
+
+const currentPath = ref(window.location.pathname)
+
+function parseRoute(path: string): AppRoute {
+  // 你的路由
+  if (path === '/merchant/apply') {
+    return { name: 'merchant-apply', params: {} }
+  }
+  if (path === '/merchant/dashboard') {
+    return { name: 'merchant-dashboard', params: {} }
+  }
+  if (path === '/merchant/orders') {
+    return { name: 'merchant-orders', params: {} }
+  }
+  if (path === '/merchant/finance') {
+    return { name: 'merchant-finance', params: {} }
+  }
+  if (path === '/merchant/finance-reports') {
+    return { name: 'merchant-finance-reports', params: {} }
+  }
+  if (path === '/committee/review') {
+    return { name: 'committee-review', params: {} }
+  }
+  if (path === '/staff/expenses') {
+    return { name: 'staff-expenses', params: {} }
+  }
+
+  // 組員的路由
+  const merchantDetailMatch = path.match(/^\/merchants\/(\d+)$/)
+  if (merchantDetailMatch) {
+    return {
+      name: 'merchant-detail',
+      params: { merchantId: Number(merchantDetailMatch[1]) },
+    }
+  }
+
+  const orderDetailMatch = path.match(/^\/orders\/(\d+)$/)
+  if (orderDetailMatch) {
+    return {
+      name: 'order-detail',
+      params: { orderId: Number(orderDetailMatch[1]) },
+    }
+  }
+
+  if (path === '/merchants') {
+    return { name: 'merchant-list', params: {} }
+  }
+  if (path === '/orders') {
+    return { name: 'order-history', params: {} }
+  }
+
+  // 預設回登入頁
+  return { name: 'login', params: {} }
+}
+
+export const currentRoute = computed(() => parseRoute(currentPath.value))
+
+export function navigateTo(path: string) {
+  window.history.pushState({}, '', path)
+  currentPath.value = path
+}
+
+window.addEventListener('popstate', () => {
+  currentPath.value = window.location.pathname
 })
-
-export default router
