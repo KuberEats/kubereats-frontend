@@ -52,30 +52,63 @@ async function handleGenerateBarcode() {
     <div class="section-header">
       <h3>我的支出</h3>
       <div class="header-actions">
-        <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
-        <button class="btn-small btn-accent" @click="handleGenerateBarcode">產生識別標籤</button>
+        <span
+          v-for="tag in tags"
+          :key="tag"
+          class="tag"
+        >{{ tag }}</span>
+        <button
+          class="btn-small btn-accent"
+          @click="handleGenerateBarcode"
+        >
+          產生識別標籤
+        </button>
       </div>
     </div>
 
-    <div v-if="loading" class="loading">載入中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      載入中...
+    </div>
 
     <template v-else-if="!error">
-      <div v-if="barcodeImage" class="card barcode-card">
-        <div class="barcode-label-title">員工識別標籤</div>
-        <img :src="barcodeImage" alt="Staff Barcode" />
-        <div class="barcode-code">STAFF-{{ userId.toString().padStart(3, '0') }}</div>
+      <div
+        v-if="barcodeImage"
+        class="card barcode-card"
+      >
+        <div class="barcode-label-title">
+          員工識別標籤
+        </div>
+        <img
+          :src="barcodeImage"
+          alt="Staff Barcode"
+        >
+        <div class="barcode-code">
+          STAFF-{{ userId.toString().padStart(3, '0') }}
+        </div>
       </div>
 
       <div class="stats-row">
         <div class="card stat-card">
-          <div class="stat-label">目前支出</div>
-          <div class="stat-value">${{ expenses.total_expense }}</div>
-          <div class="stat-desc">{{ expenses.order_count }} 筆訂單</div>
+          <div class="stat-label">
+            目前支出
+          </div>
+          <div class="stat-value">
+            ${{ expenses.total_expense }}
+          </div>
+          <div class="stat-desc">
+            {{ expenses.order_count }} 筆訂單
+          </div>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-header" style="margin-bottom: 0;">
+        <div
+          class="section-header"
+          style="margin-bottom: 0;"
+        >
           <h3>薪資扣款明細</h3>
         </div>
         <table class="data-table">
@@ -87,18 +120,31 @@ async function handleGenerateBarcode() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="deduction in deductions" :key="deduction.id">
+            <tr
+              v-for="deduction in deductions"
+              :key="deduction.id"
+            >
               <td>{{ deduction.id }}</td>
               <td><strong class="amount">${{ deduction.total_amount }}</strong></td>
               <td>{{ new Date(deduction.order_time).toLocaleString() }}</td>
             </tr>
           </tbody>
         </table>
-        <p v-if="deductions.length === 0" class="empty">尚無扣款紀錄</p>
+        <p
+          v-if="deductions.length === 0"
+          class="empty"
+        >
+          尚無扣款紀錄
+        </p>
       </div>
     </template>
 
-    <p v-if="error" class="error-text">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error-text"
+    >
+      {{ error }}
+    </p>
   </div>
 </template>
 

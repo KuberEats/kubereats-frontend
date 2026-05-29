@@ -50,30 +50,59 @@ async function handleGenerateReport() {
   <div class="page-container">
     <div class="section-header">
       <h3>收入總覽</h3>
-      <button class="btn-small" @click="navigateTo('/merchant/dashboard')">返回商家後台</button>
-      <button class="btn-small btn-accent" :disabled="generating" @click="handleGenerateReport">
+      <button
+        class="btn-small"
+        @click="navigateTo('/merchant/dashboard')"
+      >
+        返回商家後台
+      </button>
+      <button
+        class="btn-small btn-accent"
+        :disabled="generating"
+        @click="handleGenerateReport"
+      >
         {{ generating ? '產生中...' : '產生報表' }}
       </button>
     </div>
 
-    <div v-if="loading" class="loading">載入中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      載入中...
+    </div>
 
     <template v-else-if="!error">
       <div class="stats-row">
         <div class="card stat-card">
-          <div class="stat-label">目前收入</div>
-          <div class="stat-value">${{ income.total_income }}</div>
-          <div class="stat-desc">{{ income.order_count }} 筆訂單</div>
+          <div class="stat-label">
+            目前收入
+          </div>
+          <div class="stat-value">
+            ${{ income.total_income }}
+          </div>
+          <div class="stat-desc">
+            {{ income.order_count }} 筆訂單
+          </div>
         </div>
         <div class="card stat-card">
-          <div class="stat-label">本月總額</div>
-          <div class="stat-value secondary">${{ monthlyTotal }}</div>
-          <div class="stat-desc">本月累計</div>
+          <div class="stat-label">
+            本月總額
+          </div>
+          <div class="stat-value secondary">
+            ${{ monthlyTotal }}
+          </div>
+          <div class="stat-desc">
+            本月累計
+          </div>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-header" style="margin-bottom: 0;">
+        <div
+          class="section-header"
+          style="margin-bottom: 0;"
+        >
           <h3>撥款紀錄</h3>
         </div>
         <table class="data-table">
@@ -85,22 +114,38 @@ async function handleGenerateReport() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="payout in payouts" :key="payout.id">
+            <tr
+              v-for="payout in payouts"
+              :key="payout.id"
+            >
               <td>{{ payout.order_id }}</td>
               <td><strong class="amount">${{ payout.settlement_amount }}</strong></td>
               <td>
-                <span class="badge" :class="payout.status === 'payout_done' ? 'badge-success' : 'badge-warning'">
+                <span
+                  class="badge"
+                  :class="payout.status === 'payout_done' ? 'badge-success' : 'badge-warning'"
+                >
                   {{ payout.status === 'payout_done' ? '已撥款' : '處理中' }}
                 </span>
               </td>
             </tr>
           </tbody>
         </table>
-        <p v-if="payouts.length === 0" class="empty">尚無撥款紀錄</p>
+        <p
+          v-if="payouts.length === 0"
+          class="empty"
+        >
+          尚無撥款紀錄
+        </p>
       </div>
     </template>
 
-    <p v-if="error" class="error-text">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error-text"
+    >
+      {{ error }}
+    </p>
   </div>
 </template>
 

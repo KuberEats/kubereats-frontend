@@ -30,11 +30,22 @@ onMounted(async () => {
       <h3>財務報表</h3>
     </div>
 
-    <div v-if="loading" class="loading">載入中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      載入中...
+    </div>
 
     <template v-else-if="!error">
-      <div v-if="reports.length > 0" class="card">
-        <div class="section-header" style="margin-bottom: 0;">
+      <div
+        v-if="reports.length > 0"
+        class="card"
+      >
+        <div
+          class="section-header"
+          style="margin-bottom: 0;"
+        >
           <h3>已產生的報表</h3>
         </div>
         <div class="report-list">
@@ -52,7 +63,10 @@ onMounted(async () => {
       </div>
 
       <div class="card">
-        <div class="section-header" style="margin-bottom: 0;">
+        <div
+          class="section-header"
+          style="margin-bottom: 0;"
+        >
           <h3>結算歷史紀錄</h3>
         </div>
         <table class="data-table">
@@ -66,7 +80,10 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="record in history" :key="record.id">
+            <tr
+              v-for="record in history"
+              :key="record.id"
+            >
               <td>{{ record.id }}</td>
               <td>{{ record.merchant_id }}</td>
               <td>{{ record.order_id }}</td>
@@ -75,11 +92,21 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
-        <p v-if="history.length === 0" class="empty">尚無歷史紀錄</p>
+        <p
+          v-if="history.length === 0"
+          class="empty"
+        >
+          尚無歷史紀錄
+        </p>
       </div>
     </template>
 
-    <p v-if="error" class="error-text">{{ error }}</p>
+    <p
+      v-if="error"
+      class="error-text"
+    >
+      {{ error }}
+    </p>
   </div>
 </template>
 
