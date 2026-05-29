@@ -1,0 +1,148 @@
+name: Deploy Vue Frontend to Google Cloud Storage
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: frontend-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22.12.0"
+  BUILD_DIR: "dist"
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+
+    steps:
+      - name: Validate deploy branch
+        shell: bash
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            main|dev)
+              echo "Deploying branch ${GITHUB_REF_NAME}"
+              ;;
+            *)
+              echo "This workflow only deploys main or dev."
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required configuration
+        shell: bash
+        run: |
+          missing=0
+          for name in GCP_PROJECT_ID GCP_WIF_PROVIDER GCP_DEPLOY_SA GCP_BUCKET VITE_API_BASE_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required GitHub environment variable: ${name}"
+              missing=1
+            fi
+          done
+          exit "${missing}"
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+          GCP_DEPLOY_SA: ${{ vars.GCP_DEPLOY_SA }}
+          GCP_BUCKET: ${{ vars.GCP_BUCKET }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build Vue application
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: npm run build
+
+      - name: Verify build output
+        shell: bash
+        run: |
+          test -f "${BUILD_DIR}/index.html"
+          test -d "${BUILD_DIR}/assets"
+          echo "Build output verified."
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Show deployment target
+        shell: bash
+        run: |
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "Bucket: gs://${{ vars.GCP_BUCKET }}"
+          echo "Site: ${{ vars.SITE_URL }}"
+          echo "API: ${{ vars.VITE_API_BASE_URL }}"
+
+      - name: Upload Vite hashed assets
+        run: |
+          gcloud storage rsync \
+            "${BUILD_DIR}/assets" \
+            "gs://${{ vars.GCP_BUCKET }}/assets" \
+            --recursive \
+            --cache-control="public,max-age=31536000,immutable"
+
+      - name: Upload public static files
+        run: |
+          gcloud storage rsync \
+            "${BUILD_DIR}" \
+            "gs://${{ vars.GCP_BUCKET }}" \
+            --recursive \
+            --exclude="^assets/.*|^index\.html$" \
+            --cache-control="public,max-age=3600"
+
+      - name: Upload index.html last
+        run: |
+          gcloud storage cp \
+            "${BUILD_DIR}/index.html" \
+            "gs://${{ vars.GCP_BUCKET }}/index.html" \
+            --cache-control="no-cache,max-age=0,must-revalidate" \
+            --content-type="text/html"
+
+      - name: Verify deployment
+        run: |
+          gcloud storage objects describe \
+            "gs://${{ vars.GCP_BUCKET }}/index.html" \
+            --format="yaml(name,contentType,cacheControl)"
+
+      - name: Write deployment summary
+        shell: bash
+        run: |
+          echo "### Frontend deployment completed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: \`${GITHUB_REF_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Bucket: \`gs://${{ vars.GCP_BUCKET }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Site: ${{ vars.SITE_URL }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API Base URL: \`${{ vars.VITE_API_BASE_URL }}\`" >> "$GITHUB_STEP_SUMMARY"

@@ -31,3 +31,6 @@ dist-ssr
 
 # Claude Code
 .claude/
+
+# GitHub Actions Google authentication temporary credential file
+gha-creds-*.json
