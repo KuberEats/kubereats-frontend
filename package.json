@@ -8,6 +8,7 @@
     "build": "vue-tsc -b && vite build",
     "postbuild": "node scripts/create-gcs-404.mjs",
     "preview": "vite preview",
+    "test": "vitest run",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
     "lint": "eslint . --ext .ts,.vue",
     "lint:fix": "eslint . --ext .ts,.vue --fix"
@@ -19,13 +20,16 @@
     "@eslint/js": "^9.17.0",
     "@types/node": "^24.12.2",
     "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/test-utils": "^2.4.10",
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^9.17.0",
     "eslint-plugin-vue": "^9.32.0",
     "globals": "^15.14.0",
+    "jsdom": "^24.1.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.18.2",
     "vite": "^8.0.9",
+    "vitest": "^4.1.7",
     "vue-eslint-parser": "^9.4.3",
     "vue-tsc": "^3.2.7"
   }
