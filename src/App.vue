@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watchEffect } from 'vue'
 // 你的頁面
 import LoginPage from './pages/LoginPage.vue'
 import MerchantApplyPage from './pages/merchant/MerchantApplyPage.vue'
@@ -36,10 +36,26 @@ const userRole = computed(() => {
   }
 })
 
+const homePath = computed(() => {
+  if (userRole.value === 'merchant') return '/merchant/dashboard'
+  if (userRole.value === 'committee') return '/committee/review'
+  return '/merchants'
+})
+
+function handleHomeClick() {
+  navigateTo(isLoggedIn.value ? homePath.value : '/login')
+}
+
 function handleLogout() {
   clearTokens()
   navigateTo('/login')
 }
+
+watchEffect(() => {
+  if (isLoggedIn.value && currentRoute.value.name === 'login') {
+    navigateTo(homePath.value)
+  }
+})
 </script>
 
 <template>
@@ -51,7 +67,7 @@ function handleLogout() {
       <button
         class="brand-button"
         type="button"
-        @click="navigateTo('/')"
+        @click="handleHomeClick"
       >
         KuberEats
       </button>
