@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { listOrders } from '../api/orders'
-import type { Order, OrderHistorySortKey } from '../api/types'
+import { getReservationStatus, listOrders } from '../api/orders'
+import type { Order, OrderHistorySortKey, ReservationStatus, ReservationStatusResponse } from '../api/types'
 import { navigateTo } from '../router'
 
 const CURRENT_USER_ID = 1
@@ -13,6 +13,7 @@ const sortOptions: { label: string; value: OrderHistorySortKey }[] = [
 
 const selectedSort = ref<OrderHistorySortKey>('time')
 const orders = ref<Order[]>([])
+const latestReservation = ref<ReservationStatusResponse | null>(null)
 const isLoading = ref(false)
 const errorMessage = ref('')
 
@@ -39,12 +40,37 @@ function statusLabel(status: number) {
   return '處理中'
 }
 
+function reservationStatusLabel(status: ReservationStatus) {
+  if (status === 'PENDING_RESERVATION' || status === 'PROCESSING') return '確認中'
+  if (status === 'RESERVED') return '已保留'
+  if (status === 'SOLD_OUT') return '已售完'
+  if (status === 'CANCELLED') return '已取消'
+  if (status === 'EXPIRED') return '已逾時'
+  return '失敗'
+}
+
+function reservationMerchantName(reservation: ReservationStatusResponse) {
+  return reservation.merchant_name || '預訂餐點'
+}
+
+function reservationItemCount(reservation: ReservationStatusResponse) {
+  return reservation.items?.length || reservation.failed_items?.length || 0
+}
+
 async function fetchOrders() {
   isLoading.value = true
   errorMessage.value = ''
 
   try {
     orders.value = await listOrders(CURRENT_USER_ID, selectedSort.value)
+    const latestOrderToken = localStorage.getItem('latestReservationOrderToken')
+    if (latestOrderToken) {
+      try {
+        latestReservation.value = await getReservationStatus(latestOrderToken)
+      } catch {
+        latestReservation.value = null
+      }
+    }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '歷史訂單讀取失敗'
   } finally {
@@ -98,40 +124,71 @@ watch(selectedSort, fetchOrders)
       歷史訂單載入中。
     </p>
 
-    <section
-      v-else
-      class="history-list"
-      aria-label="歷史訂單列表"
-    >
-      <article
-        v-for="order in orders"
-        :key="order.id"
-        class="history-order-row"
-        @click="navigateTo(`/orders/${order.id}`)"
+    <template v-else>
+      <section
+        v-if="latestReservation"
+        class="history-list"
+        aria-label="近期預訂列表"
       >
-        <div class="history-order-main">
-          <div>
-            <p class="eyebrow">
-              Order #{{ order.id }}
-            </p>
-            <h2>{{ merchantNames(order) }}</h2>
+        <article
+          class="history-order-row"
+          @click="navigateTo(`/reservation-status/${encodeURIComponent(latestReservation.order_token)}`)"
+        >
+          <div class="history-order-main">
+            <div>
+              <p class="eyebrow">
+                Reservation
+              </p>
+              <h2>{{ reservationMerchantName(latestReservation) }}</h2>
+            </div>
+            <span class="status-badge">{{ reservationStatusLabel(latestReservation.status) }}</span>
           </div>
-          <span class="status-badge">{{ statusLabel(order.orderStatus) }}</span>
-        </div>
 
-        <div class="history-order-meta">
-          <span>{{ formatDate(order.orderTime) }}</span>
-          <span>{{ order.items.length }} 項餐點</span>
-          <strong>${{ order.totalAmount }}</strong>
-        </div>
-      </article>
+          <div class="history-order-meta">
+            <span>{{ latestReservation.service_date || '日期確認中' }}</span>
+            <span>{{ latestReservation.pickup_slot || '時段確認中' }}</span>
+            <span>{{ reservationItemCount(latestReservation) }} 項餐點</span>
+            <strong v-if="latestReservation.pickup_number">
+              取餐號碼 {{ latestReservation.pickup_number }}
+            </strong>
+          </div>
+        </article>
+      </section>
 
-      <p
-        v-if="orders.length === 0"
-        class="empty-state"
+      <section
+        class="history-list"
+        aria-label="歷史訂單列表"
       >
-        目前還沒有歷史訂單。
-      </p>
-    </section>
+        <article
+          v-for="order in orders"
+          :key="order.id"
+          class="history-order-row"
+          @click="navigateTo(`/orders/${order.id}`)"
+        >
+          <div class="history-order-main">
+            <div>
+              <p class="eyebrow">
+                Order #{{ order.id }}
+              </p>
+              <h2>{{ merchantNames(order) }}</h2>
+            </div>
+            <span class="status-badge">{{ statusLabel(order.orderStatus) }}</span>
+          </div>
+
+          <div class="history-order-meta">
+            <span>{{ formatDate(order.orderTime) }}</span>
+            <span>{{ order.items.length }} 項餐點</span>
+            <strong>${{ order.totalAmount }}</strong>
+          </div>
+        </article>
+
+        <p
+          v-if="orders.length === 0"
+          class="empty-state"
+        >
+          目前還沒有歷史訂單。
+        </p>
+      </section>
+    </template>
   </main>
 </template>
