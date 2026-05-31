@@ -1,3 +1,5 @@
+import { navigateTo } from '../router'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 let accessToken: string | null = localStorage.getItem('accessToken')
@@ -52,7 +54,7 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
       return retryResponse.json() as Promise<T>
     } else {
       clearTokens()
-      window.location.href = '/login'
+      navigateTo('/login')
       throw new Error('Session expired')
     }
   }

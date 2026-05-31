@@ -85,6 +85,7 @@ jobs:
         shell: bash
         run: |
           test -f "${BUILD_DIR}/index.html"
+          test -f "${BUILD_DIR}/404.html"
           test -d "${BUILD_DIR}/assets"
           echo "Build output verified."
 
@@ -106,6 +107,13 @@ jobs:
           echo "Site: ${{ vars.SITE_URL }}"
           echo "API: ${{ vars.VITE_API_BASE_URL }}"
 
+      - name: Configure bucket website routing
+        run: |
+          gcloud storage buckets update \
+            "gs://${{ vars.GCP_BUCKET }}" \
+            --web-main-page-suffix="index.html" \
+            --web-error-page="404.html"
+
       - name: Upload Vite hashed assets
         run: |
           gcloud storage rsync \
@@ -120,14 +128,19 @@ jobs:
             "${BUILD_DIR}" \
             "gs://${{ vars.GCP_BUCKET }}" \
             --recursive \
-            --exclude="^assets/.*|^index\.html$" \
+            --exclude="^assets/.*|^index\.html$|^404\.html$" \
             --cache-control="public,max-age=3600"
 
-      - name: Upload index.html last
+      - name: Upload app shell HTML last
         run: |
           gcloud storage cp \
             "${BUILD_DIR}/index.html" \
             "gs://${{ vars.GCP_BUCKET }}/index.html" \
+            --cache-control="no-cache,max-age=0,must-revalidate" \
+            --content-type="text/html"
+          gcloud storage cp \
+            "${BUILD_DIR}/404.html" \
+            "gs://${{ vars.GCP_BUCKET }}/404.html" \
             --cache-control="no-cache,max-age=0,must-revalidate" \
             --content-type="text/html"
 
@@ -135,6 +148,9 @@ jobs:
         run: |
           gcloud storage objects describe \
             "gs://${{ vars.GCP_BUCKET }}/index.html" \
+            --format="yaml(name,contentType,cacheControl)"
+          gcloud storage objects describe \
+            "gs://${{ vars.GCP_BUCKET }}/404.html" \
             --format="yaml(name,contentType,cacheControl)"
 
       - name: Write deployment summary

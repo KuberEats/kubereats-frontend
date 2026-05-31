@@ -24,7 +24,20 @@ interface AppRoute {
 
 const currentPath = ref(window.location.pathname)
 
+function normalizePath(path: string) {
+  if (path.length > 1 && path.endsWith('/')) {
+    return path.slice(0, -1)
+  }
+  return path
+}
+
 function parseRoute(path: string): AppRoute {
+  path = normalizePath(path)
+
+  if (path === '/' || path === '/login') {
+    return { name: 'login', params: {} }
+  }
+
   // 你的路由
   if (path === '/merchant/apply') {
     return { name: 'merchant-apply', params: {} }
@@ -79,8 +92,9 @@ function parseRoute(path: string): AppRoute {
 export const currentRoute = computed(() => parseRoute(currentPath.value))
 
 export function navigateTo(path: string) {
-  window.history.pushState({}, '', path)
-  currentPath.value = path
+  const normalizedPath = normalizePath(path)
+  window.history.pushState({}, '', normalizedPath)
+  currentPath.value = normalizedPath
 }
 
 window.addEventListener('popstate', () => {
