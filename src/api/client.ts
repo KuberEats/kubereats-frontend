@@ -5,6 +5,18 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 let accessToken: string | null = localStorage.getItem('accessToken')
 let refreshTokenValue: string | null = localStorage.getItem('refreshToken')
 
+export class ApiError extends Error {
+  status: number
+  data: unknown
+
+  constructor(message: string, status: number, data: unknown = null) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.data = data
+  }
+}
+
 export function setTokens(access: string, refresh: string) {
   accessToken = access
   refreshTokenValue = refresh
@@ -48,8 +60,7 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
         headers,
       })
       if (!retryResponse.ok) {
-        const message = await parseErrorMessage(retryResponse)
-        throw new Error(message || `Request failed with status ${retryResponse.status}`)
+        throw await buildApiError(retryResponse)
       }
       return retryResponse.json() as Promise<T>
     } else {
@@ -60,8 +71,7 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
   }
 
   if (!response.ok) {
-    const message = await parseErrorMessage(response)
-    throw new Error(message || `Request failed with status ${response.status}`)
+    throw await buildApiError(response)
   }
 
   if (response.status === 204) {
@@ -87,13 +97,21 @@ async function tryRefreshToken(): Promise<boolean> {
   }
 }
 
-async function parseErrorMessage(response: Response) {
+async function buildApiError(response: Response) {
   const fallbackMessage = await response.text()
+  let data: unknown = null
+
   try {
-    const errorBody = JSON.parse(fallbackMessage) as { detail?: unknown }
-    if (typeof errorBody.detail === 'string') return errorBody.detail
+    const errorBody = JSON.parse(fallbackMessage) as { detail?: unknown; message?: unknown }
+    data = errorBody
+    if (typeof errorBody.message === 'string') {
+      return new ApiError(errorBody.message, response.status, errorBody)
+    }
+    if (typeof errorBody.detail === 'string') {
+      return new ApiError(errorBody.detail, response.status, errorBody)
+    }
     if (Array.isArray(errorBody.detail)) {
-      return errorBody.detail
+      const detail = errorBody.detail
         .map(item => {
           if (typeof item === 'string') return item
           if (item && typeof item === 'object' && 'msg' in item) return String(item.msg)
@@ -101,9 +119,19 @@ async function parseErrorMessage(response: Response) {
         })
         .filter(Boolean)
         .join('，')
+      return new ApiError(detail || `Request failed with status ${response.status}`, response.status, errorBody)
     }
   } catch {
-    return fallbackMessage
+    return new ApiError(
+      fallbackMessage || `Request failed with status ${response.status}`,
+      response.status,
+      data,
+    )
   }
-  return fallbackMessage
+
+  return new ApiError(
+    fallbackMessage || `Request failed with status ${response.status}`,
+    response.status,
+    data,
+  )
 }

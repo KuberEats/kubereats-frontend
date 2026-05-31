@@ -79,6 +79,62 @@ export interface CartItem {
   quantity: number
 }
 
+export type PickupOption = 'SELF_PICKUP' | 'DELIVERY'
+
+export type ReservationStatus =
+  | 'PENDING_RESERVATION'
+  | 'PROCESSING'
+  | 'RESERVED'
+  | 'SOLD_OUT'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'FAILED'
+
+export interface ReservationRequestPayload {
+  user_id: number
+  merchant_id: number
+  service_date: string
+  pickup_slot: string
+  pickup_option: PickupOption
+  items: {
+    menu_id: number
+    quantity: number
+  }[]
+}
+
+export interface ReservationRequestResponse {
+  reservation_id?: string
+  order_token: string
+  status: ReservationStatus
+  message?: string
+}
+
+export interface ReservationStatusItem {
+  id?: number | string
+  menu_id?: number
+  item_name?: string
+  name?: string
+  quantity?: number
+  unit_price?: number
+  subtotal?: number
+}
+
+export interface ReservationStatusResponse {
+  order_token: string
+  status: ReservationStatus
+  service_date?: string
+  pickup_slot?: string
+  pickup_option?: PickupOption | string
+  pickup_number?: string | number | null
+  merchant_name?: string
+  message?: string
+  failure_reason?: string
+  failed_items?: ReservationStatusItem[]
+  items?: ReservationStatusItem[]
+  order_time?: string
+  comments?: string
+}
+
 export interface OrderItem {
   id: number
   menuId: number

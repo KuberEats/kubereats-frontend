@@ -1,5 +1,12 @@
 import { apiRequest } from './client'
-import type { CartItem, Order, OrderHistorySortKey } from './types'
+import type {
+  CartItem,
+  Order,
+  OrderHistorySortKey,
+  ReservationRequestPayload,
+  ReservationRequestResponse,
+  ReservationStatusResponse,
+} from './types'
 
 export function createOrder(userId: number, items: CartItem[]) {
   return apiRequest<Order>('/orders', {
@@ -12,6 +19,36 @@ export function createOrder(userId: number, items: CartItem[]) {
       })),
     }),
   })
+}
+
+export function createReservationRequest(
+  payload: ReservationRequestPayload,
+  idempotencyKey?: string,
+) {
+  const headers: Record<string, string> = {}
+
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey
+  }
+
+  return apiRequest<ReservationRequestResponse>('/reservation-requests', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  })
+}
+
+export function getReservationStatus(orderToken: string) {
+  return apiRequest<ReservationStatusResponse>(
+    `/reservation-requests/${encodeURIComponent(orderToken)}`,
+  )
+}
+
+export function cancelReservation(orderToken: string) {
+  return apiRequest<ReservationStatusResponse>(
+    `/reservation-requests/${encodeURIComponent(orderToken)}/cancel`,
+    { method: 'POST' },
+  )
 }
 
 export function listOrders(userId: number, sortBy: OrderHistorySortKey) {
