@@ -108,11 +108,14 @@ jobs:
           echo "API: ${{ vars.VITE_API_BASE_URL }}"
 
       - name: Configure bucket website routing
+        shell: bash
         run: |
-          gcloud storage buckets update \
-            "gs://${{ vars.GCP_BUCKET }}" \
-            --web-main-page-suffix="index.html" \
-            --web-error-page="404.html"
+          if ! gcloud storage buckets update \
+              "gs://${{ vars.GCP_BUCKET }}" \
+              --web-main-page-suffix="index.html" \
+              --web-error-page="404.html"; then
+            echo "::warning::Could not update bucket website routing. Direct SPA routes such as /login require gs://${{ vars.GCP_BUCKET }} to use index.html as the main page and 404.html as the error page."
+          fi
 
       - name: Upload Vite hashed assets
         run: |
