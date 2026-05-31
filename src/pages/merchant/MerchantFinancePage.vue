@@ -143,7 +143,7 @@ async function handleGenerateReport() {
           <div
             class="pie-chart"
             :style="pieChartStyle"
-          ></div>
+          />
           <div class="chart-legend">
             <div
               v-for="item in chartData"
@@ -153,7 +153,7 @@ async function handleGenerateReport() {
               <span
                 class="legend-color"
                 :style="{ backgroundColor: item.color }"
-              ></span>
+              />
               <span class="legend-name">{{ item.name }}</span>
               <span class="legend-percent">{{ item.percent }}%</span>
               <span class="legend-amount">${{ item.amount }}</span>
