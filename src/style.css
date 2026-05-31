@@ -26,7 +26,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
   color: inherit;
 }
@@ -109,6 +110,20 @@ h1, h2, h3, h4, p {
   padding: 9px 12px;
   background: #ffffff;
   color: #111827;
+}
+
+.date-picker select {
+  border: 1px solid #d8d2c8;
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: #ffffff;
+  color: #111827;
+}
+
+.date-picker.vertical {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .hero-panel,
@@ -352,6 +367,10 @@ h1, h2, h3, h4, p {
   align-items: center;
 }
 
+.status-actions.wrap {
+  flex-wrap: wrap;
+}
+
 .quantity-control button {
   display: grid;
   place-items: center;
@@ -454,6 +473,170 @@ h1, h2, h3, h4, p {
   margin-top: 18px;
 }
 
+.reservation-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sold-out-panel {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.reservation-status-page {
+  width: min(720px, 100%);
+  min-height: calc(100vh - 58px);
+  margin: 0 auto;
+  padding: 28px 16px 104px;
+}
+
+.reservation-status-card,
+.reservation-info-card,
+.pickup-number-card {
+  border: 1px solid #e3ded6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.reservation-status-card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.reservation-status-card h1 {
+  font-size: 28px;
+}
+
+.reservation-status-card > p {
+  color: #6b7280;
+}
+
+.reservation-status-card.success .status-icon {
+  background: #dcfce7;
+  color: #047857;
+}
+
+.reservation-status-card.pending .status-icon {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.reservation-status-card.danger .status-icon,
+.status-icon.warning {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.status-icon.warning {
+  width: 42px;
+  height: 42px;
+  font-size: 24px;
+}
+
+.status-message.compact {
+  padding: 8px 0 0;
+}
+
+.inline-warning {
+  width: 100%;
+  border-radius: 8px;
+  background: #fff7ed;
+  padding: 10px 12px;
+  color: #9a3412;
+  font-size: 14px;
+}
+
+.pickup-number-card,
+.reservation-info-card {
+  margin-top: 16px;
+  padding: 18px;
+}
+
+.pickup-number-card {
+  text-align: center;
+}
+
+.pickup-number-card strong {
+  color: #047857;
+  font-size: 18px;
+}
+
+.reservation-info-card h2,
+.reservation-item-list h3 {
+  margin-bottom: 14px;
+}
+
+.reservation-info-card dl {
+  display: grid;
+  gap: 12px;
+}
+
+.reservation-info-card dl div,
+.reservation-item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #ebe6dd;
+  padding-top: 12px;
+}
+
+.reservation-info-card dl div:first-child,
+.reservation-item-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.reservation-info-card dt {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.reservation-info-card dd {
+  color: #111827;
+  font-weight: 700;
+  text-align: right;
+}
+
+.reservation-item-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.failed-items h2 {
+  color: #b91c1c;
+}
+
+.fixed-status-actions {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  border-top: 1px solid #e3ded6;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 12px 16px;
+  backdrop-filter: blur(8px);
+}
+
 @media (max-width: 800px) {
   .page-header,
   .history-header,
@@ -474,7 +657,8 @@ h1, h2, h3, h4, p {
   .merchant-card,
   .merchant-detail-hero,
   .detail-layout,
-  .order-grid {
+  .order-grid,
+  .reservation-controls {
     grid-template-columns: 1fr;
   }
 
@@ -963,5 +1147,10 @@ h1, h2, h3, h4, p {
 
   .merchant-image.large {
     aspect-ratio: auto;
+  }
+
+  .fixed-status-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

@@ -12,6 +12,7 @@ export type RouteName =
   | 'merchant-detail'
   | 'order-history'
   | 'order-detail'
+  | 'reservation-status'
   | 'staff-expenses'
 
 interface AppRoute {
@@ -19,6 +20,7 @@ interface AppRoute {
   params: {
     merchantId?: number
     orderId?: number
+    orderToken?: string
   }
 }
 
@@ -75,6 +77,14 @@ function parseRoute(path: string): AppRoute {
     return {
       name: 'order-detail',
       params: { orderId: Number(orderDetailMatch[1]) },
+    }
+  }
+
+  const reservationStatusMatch = path.match(/^\/reservation-status\/([^/]+)$/)
+  if (reservationStatusMatch) {
+    return {
+      name: 'reservation-status',
+      params: { orderToken: decodeURIComponent(reservationStatusMatch[1]) },
     }
   }
 

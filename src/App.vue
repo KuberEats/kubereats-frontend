@@ -15,6 +15,7 @@ import MerchantDetailPage from './pages/MerchantDetailPage.vue'
 import MerchantListPage from './pages/MerchantListPage.vue'
 import OrderDetailPage from './pages/OrderDetailPage.vue'
 import OrderHistoryPage from './pages/OrderHistoryPage.vue'
+import ReservationStatusPage from './pages/ReservationStatusPage.vue'
 
 import { currentRoute, navigateTo } from './router'
 import { clearTokens, getAccessToken } from './api/client'
@@ -128,6 +129,10 @@ function handleLogout() {
       <OrderDetailPage
         v-else-if="currentRoute.name === 'order-detail'"
         :order-id="currentRoute.params.orderId"
+      />
+      <ReservationStatusPage
+        v-else-if="currentRoute.name === 'reservation-status'"
+        :order-token="currentRoute.params.orderToken"
       />
     </main>
   </div>
