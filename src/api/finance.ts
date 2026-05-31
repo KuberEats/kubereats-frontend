@@ -16,6 +16,12 @@ export interface MonthlyTotal {
   monthly_total: number
 }
 
+export interface MonthlyItemDistribution {
+  itemName: string
+  totalAmount: number
+  percentage: number
+}
+
 export interface ReportResult {
   filename: string
   url: string
@@ -61,6 +67,10 @@ export function getMerchantPayouts(merchantId: number): Promise<Payout[]> {
 
 export function getMerchantMonthlyTotal(merchantId: number): Promise<MonthlyTotal> {
   return apiRequest<MonthlyTotal>(`/api/merchant/monthly-total?merchant_id=${merchantId}`)
+}
+
+export function getMonthlyItemDistribution(merchantId: number): Promise<MonthlyItemDistribution[]> {
+  return apiRequest<MonthlyItemDistribution[]>(`/api/merchant/monthly-item-distribution?merchant_id=${merchantId}`)
 }
 
 export function generateReport(merchantId: number): Promise<ReportResult> {
