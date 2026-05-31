@@ -1,30 +1,67 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { getMyMerchant } from '../../api/merchants'
-import { getMerchantIncome, getMerchantPayouts, getMerchantMonthlyTotal, generateReport } from '../../api/finance'
+import { 
+  getMerchantIncome, 
+  getMerchantPayouts, 
+  getMerchantMonthlyTotal, 
+  getMonthlyItemDistribution,
+  generateReport 
+} from '../../api/finance'
 import { navigateTo } from '../../router'
 import type { MerchantInfo } from '../../api/types'
-import type { IncomeStatus, Payout } from '../../api/finance'
+import type { IncomeStatus, Payout, MonthlyItemDistribution } from '../../api/finance'
 
 const merchant = ref<MerchantInfo | null>(null)
 const income = ref<IncomeStatus>({ total_income: 0, order_count: 0 })
 const payouts = ref<Payout[]>([])
 const monthlyTotal = ref(0)
+const monthlyDistribution = ref<MonthlyItemDistribution[]>([])
 const loading = ref(true)
 const generating = ref(false)
 const error = ref('')
 
+const chartData = computed(() => {
+  if (monthlyDistribution.value.length === 0) return []
+  
+  let cumulativePercent = 0
+  const colors = ['#f97316', '#7c3aed', '#10b981', '#3b82f6', '#f43f5e', '#eab308']
+  
+  return monthlyDistribution.value.map((item, index) => {
+    const start = cumulativePercent
+    cumulativePercent += item.percentage
+    return {
+      name: item.itemName,
+      amount: item.totalAmount,
+      percent: item.percentage.toFixed(1),
+      start: start,
+      end: cumulativePercent,
+      color: colors[index % colors.length]
+    }
+  })
+})
+
+const pieChartStyle = computed(() => {
+  if (chartData.value.length === 0) return {}
+  const gradient = chartData.value.map(d => `${d.color} ${d.start}% ${d.end}%`).join(', ')
+  return {
+    background: `conic-gradient(${gradient})`
+  }
+})
+
 onMounted(async () => {
   try {
     merchant.value = await getMyMerchant()
-    const [inc, pays, monthly] = await Promise.all([
+    const [inc, pays, monthly, distribution] = await Promise.all([
       getMerchantIncome(merchant.value.id),
       getMerchantPayouts(merchant.value.id),
       getMerchantMonthlyTotal(merchant.value.id),
+      getMonthlyItemDistribution(merchant.value.id)
     ])
     income.value = inc
     payouts.value = pays
     monthlyTotal.value = monthly.monthly_total
+    monthlyDistribution.value = distribution
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '載入失敗'
   } finally {
@@ -95,6 +132,39 @@ async function handleGenerateReport() {
           <div class="stat-desc">
             本月累計
           </div>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="section-header">
+          <h3>本月品項佔比</h3>
+        </div>
+        <div class="chart-content">
+          <div
+            class="pie-chart"
+            :style="pieChartStyle"
+          ></div>
+          <div class="chart-legend">
+            <div
+              v-for="item in chartData"
+              :key="item.name"
+              class="legend-item"
+            >
+              <span
+                class="legend-color"
+                :style="{ backgroundColor: item.color }"
+              ></span>
+              <span class="legend-name">{{ item.name }}</span>
+              <span class="legend-percent">{{ item.percent }}%</span>
+              <span class="legend-amount">${{ item.amount }}</span>
+            </div>
+          </div>
+        </div>
+        <div
+          v-if="chartData.length === 0"
+          class="empty"
+        >
+          目前無銷售數據
         </div>
       </div>
 
@@ -176,5 +246,20 @@ async function handleGenerateReport() {
 .btn-accent:hover { background: #ea580c; }
 .btn-accent:disabled { opacity: 0.55; cursor: not-allowed; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
-@media (max-width: 600px) { .stats-row { grid-template-columns: 1fr; } }
+
+.chart-card { margin-top: 1rem; }
+.chart-content { display: flex; align-items: center; gap: 2rem; padding: 1rem 0; }
+.pie-chart { width: 150px; height: 150px; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
+.chart-legend { flex: 1; display: grid; gap: 0.5rem; }
+.legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.legend-color { width: 12px; height: 12px; border-radius: 3px; }
+.legend-name { flex: 1; color: #4b5563; }
+.legend-percent { font-weight: 600; color: #111827; min-width: 45px; text-align: right; }
+.legend-amount { color: #9ca3af; font-size: 0.8rem; min-width: 60px; text-align: right; }
+
+@media (max-width: 600px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .chart-content { flex-direction: column; gap: 1.5rem; }
+  .pie-chart { width: 120px; height: 120px; }
+}
 </style>
