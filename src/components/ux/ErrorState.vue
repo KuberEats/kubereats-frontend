@@ -1,16 +1,24 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import { computed } from 'vue'
+import { useI18n } from '../../i18n'
+
+const props = withDefaults(defineProps<{
   title?: string
   message: string
   retryLabel?: string
   homeLabel?: string
   showHome?: boolean
 }>(), {
-  title: '發生問題',
-  retryLabel: '重試',
-  homeLabel: '回首頁',
+  title: undefined,
+  retryLabel: undefined,
+  homeLabel: undefined,
   showHome: false,
 })
+
+const { t } = useI18n()
+const resolvedTitle = computed(() => props.title || t('state.errorTitle'))
+const resolvedRetryLabel = computed(() => props.retryLabel || t('state.retry'))
+const resolvedHomeLabel = computed(() => props.homeLabel || t('state.home'))
 
 defineEmits<{
   retry: []
@@ -30,7 +38,7 @@ defineEmits<{
       !
     </div>
     <div>
-      <h2>{{ title }}</h2>
+      <h2>{{ resolvedTitle }}</h2>
       <p>{{ message }}</p>
     </div>
     <div class="error-actions">
@@ -39,7 +47,7 @@ defineEmits<{
         type="button"
         @click="$emit('retry')"
       >
-        {{ retryLabel }}
+        {{ resolvedRetryLabel }}
       </button>
       <button
         v-if="showHome"
@@ -47,7 +55,7 @@ defineEmits<{
         type="button"
         @click="$emit('home')"
       >
-        {{ homeLabel }}
+        {{ resolvedHomeLabel }}
       </button>
     </div>
   </section>

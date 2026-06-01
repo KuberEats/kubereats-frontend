@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(defineProps<{
   modelValue: number
@@ -11,13 +12,15 @@ const props = withDefaults(defineProps<{
   min: 0,
   max: Number.POSITIVE_INFINITY,
   disabled: false,
-  label: '數量',
+  label: undefined,
 })
 
+const { t } = useI18n()
 const emit = defineEmits<{
   'update:modelValue': [value: number]
 }>()
 
+const resolvedLabel = computed(() => props.label || t('quantity.label'))
 const canDecrease = computed(() => !props.disabled && props.modelValue > props.min)
 const canIncrease = computed(() => !props.disabled && props.modelValue < props.max)
 
@@ -30,11 +33,11 @@ function update(value: number) {
 <template>
   <div
     class="quantity-stepper"
-    :aria-label="label"
+    :aria-label="resolvedLabel"
   >
     <button
       type="button"
-      :aria-label="`${label}減少`"
+      :aria-label="t('quantity.decrease', { label: resolvedLabel })"
       :disabled="!canDecrease"
       @click="update(modelValue - 1)"
     >
@@ -43,7 +46,7 @@ function update(value: number) {
     <output aria-live="polite">{{ modelValue }}</output>
     <button
       type="button"
-      :aria-label="`${label}增加`"
+      :aria-label="t('quantity.increase', { label: resolvedLabel })"
       :disabled="!canIncrease"
       @click="update(modelValue + 1)"
     >

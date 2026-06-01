@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { MenuItem } from '../api/types'
 import PriceText from './ux/PriceText.vue'
 import QuantityStepper from './ux/QuantityStepper.vue'
+import { useI18n } from '../i18n'
 
 const props = withDefaults(defineProps<{
   item: MenuItem
@@ -17,6 +18,8 @@ defineEmits<{
   add: [item: MenuItem]
   quantity: [menuId: number, quantity: number]
 }>()
+
+const { t } = useI18n()
 
 const isUnavailable = computed(() =>
   props.disabled || props.item.isAvailable === false || props.item.maxDailyQuantity <= 0,
@@ -35,7 +38,7 @@ const isUnavailable = computed(() =>
       <p v-if="item.description">
         {{ item.description }}
       </p>
-      <p>每日限量 {{ item.maxDailyQuantity }} 份</p>
+      <p>{{ t('menu.dailyLimit', { count: item.maxDailyQuantity }) }}</p>
       <PriceText :value="item.price" />
     </div>
 
@@ -54,10 +57,10 @@ const isUnavailable = computed(() =>
       type="button"
       data-testid="add-menu-item-button"
       :disabled="isUnavailable"
-      :aria-label="`加入 ${item.itemName}`"
+      :aria-label="t('menu.addItem', { name: item.itemName })"
       @click="$emit('add', item)"
     >
-      {{ isUnavailable ? '售完' : '加入' }}
+      {{ isUnavailable ? t('menu.soldOut') : t('menu.add') }}
     </button>
   </article>
 </template>

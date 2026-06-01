@@ -15,12 +15,14 @@ import SectionCard from '../components/ux/SectionCard.vue'
 import StatusBadge from '../components/ux/StatusBadge.vue'
 import ToastNotification from '../components/ux/ToastNotification.vue'
 import { navigateTo } from '../router'
+import { useI18n } from '../i18n'
 
 const cart = useCart()
 const isSubmitting = ref(false)
 const submitError = ref('')
 const successReservation = ref<ReservationRequestResponse | null>(null)
 const toastMessage = ref('')
+const { t } = useI18n()
 
 const canSubmit = computed(() =>
   cart.items.value.length > 0 &&
@@ -76,23 +78,23 @@ function getSubmissionIdempotencyKey(payload: object) {
 }
 
 function formatOrderError(error: unknown) {
-  const message = error instanceof Error ? error.message : '訂單建立失敗'
+  const message = error instanceof Error ? error.message : t('checkout.failed')
   const quantityMatch = message.match(/^(.+) exceeds (?:daily available|remaining daily) quantity$/)
 
   if (quantityMatch) {
-    return `${quantityMatch[1]} 今日可訂數量不足，請減少份數後再送出。`
+    return `${quantityMatch[1]} ${t('checkout.soldOut')}`
   }
   if (message.includes('minimum order is')) {
     const [merchantName, minimumAmount] = message.split(' minimum order is ')
-    return `${merchantName} 尚未達到低消 ${formatMoney(Number(minimumAmount))}。`
+    return `${merchantName} ${t('cart.minimumGap', { amount: formatMoney(Number(minimumAmount)) })}`
   }
   if (error instanceof ApiError && error.code === 'unauthorized') {
-    return '登入已逾期，請重新登入後繼續下單。'
+    return t('checkout.authExpired')
   }
   if (error instanceof ApiError && error.code === 'network_error') {
-    return '網路連線失敗，購物車已保留，請稍後重試。'
+    return t('checkout.networkFailure')
   }
-  return message || '訂單建立失敗，請稍後再試。'
+  return message || t('checkout.failed')
 }
 
 async function submitOrder() {
@@ -100,7 +102,7 @@ async function submitOrder() {
 
   const payload = buildPayload()
   if (!payload) {
-    submitError.value = '找不到商家資訊，請回商家頁重新選擇餐點。'
+    submitError.value = t('checkout.missingMerchant')
     return
   }
 
@@ -112,18 +114,18 @@ async function submitOrder() {
     const reservation = await createReservationRequest(payload, idempotencyKey)
 
     if (reservation.status === 'SOLD_OUT') {
-      submitError.value = reservation.message || '餐點容量不足，請調整品項或時段後再試。'
+      submitError.value = reservation.message || t('checkout.soldOut')
       return
     }
     if (!reservation.order_token) {
-      submitError.value = '系統未回傳預訂查詢代碼，請稍後到訂單紀錄確認。'
+      submitError.value = t('checkout.missingToken')
       return
     }
 
     localStorage.setItem('latestReservationOrderToken', reservation.order_token)
     localStorage.removeItem('currentReservationAttempt')
     successReservation.value = reservation
-    toastMessage.value = '訂單已送出'
+    toastMessage.value = t('checkout.toastSuccess')
     cart.clearCart()
   } catch (error) {
     submitError.value = formatOrderError(error)
@@ -136,9 +138,9 @@ async function submitOrder() {
 <template>
   <main class="page checkout-page">
     <PageHeader
-      eyebrow="Checkout"
-      title="確認訂單"
-      subtitle="送出前確認品項、數量、總額與取餐時段。"
+      :eyebrow="t('checkout.eyebrow')"
+      :title="t('checkout.title')"
+      :subtitle="t('checkout.subtitle')"
     >
       <template #action>
         <button
@@ -146,7 +148,7 @@ async function submitOrder() {
           type="button"
           @click="navigateTo(cart.merchantId.value ? `/merchants/${cart.merchantId.value}` : '/merchants')"
         >
-          回菜單
+          {{ t('checkout.backToMenu') }}
         </button>
       </template>
     </PageHeader>
@@ -156,25 +158,25 @@ async function submitOrder() {
       class="checkout-success"
     >
       <StatusBadge
-        label="已送出"
+        :label="t('status.success')"
         tone="success"
       />
-      <h2>預訂已送出</h2>
-      <p>訂單狀態會持續更新，請在狀態頁查看最新結果。</p>
+      <h2>{{ t('checkout.successTitle') }}</h2>
+      <p>{{ t('checkout.successDescription') }}</p>
       <div class="checkout-actions">
         <button
           class="primary-button"
           type="button"
           @click="navigateTo(`/reservation-status/${encodeURIComponent(successReservation.order_token)}`)"
         >
-          查看訂單狀態
+          {{ t('checkout.viewStatus') }}
         </button>
         <button
           class="ghost-button"
           type="button"
           @click="navigateTo('/orders')"
         >
-          查看歷史訂單
+          {{ t('checkout.viewHistory') }}
         </button>
       </div>
     </SectionCard>
@@ -182,9 +184,9 @@ async function submitOrder() {
     <EmptyState
       v-else-if="cart.items.value.length === 0"
       icon="?"
-      title="購物車是空的"
-      description="回到商家列表選擇想吃的餐點。"
-      action-label="找商家"
+      :title="t('checkout.emptyTitle')"
+      :description="t('checkout.emptyDescription')"
+      :action-label="t('checkout.findMerchants')"
       @action="navigateTo('/merchants')"
     />
 
@@ -196,7 +198,7 @@ async function submitOrder() {
         <div class="section-title-row">
           <div>
             <p class="eyebrow">
-              Review
+              {{ t('checkout.review') }}
             </p>
             <h2>{{ cart.merchantName.value }}</h2>
           </div>
@@ -211,7 +213,7 @@ async function submitOrder() {
           >
             <div>
               <strong>{{ item.menuItem.itemName }}</strong>
-              <span><PriceText :value="item.menuItem.price" /> / 份</span>
+              <span><PriceText :value="item.menuItem.price" /> {{ t('checkout.unit') }}</span>
             </div>
             <QuantityStepper
               :model-value="item.quantity"
@@ -226,7 +228,7 @@ async function submitOrder() {
         </div>
 
         <div class="total-row">
-          <span>總計</span>
+          <span>{{ t('checkout.total') }}</span>
           <PriceText :value="cart.total.value" />
         </div>
       </SectionCard>
@@ -235,21 +237,21 @@ async function submitOrder() {
         <div class="section-title-row">
           <div>
             <p class="eyebrow">
-              Options
+              {{ t('checkout.options') }}
             </p>
-            <h2>取餐資訊</h2>
+            <h2>{{ t('checkout.pickupInfo') }}</h2>
           </div>
         </div>
 
         <div class="checkout-options">
-          <FormField label="預訂日期">
+          <FormField :label="t('detail.date')">
             <input
               v-model="cart.serviceDate.value"
               type="date"
               :disabled="isSubmitting"
             >
           </FormField>
-          <FormField label="取餐時段">
+          <FormField :label="t('detail.pickupSlot')">
             <input
               v-model="cart.pickupSlot.value"
               type="text"
@@ -257,15 +259,15 @@ async function submitOrder() {
             >
           </FormField>
           <p class="checkout-note">
-            目前 API 支援自取預訂日期與取餐時段；備註與用餐人資訊待後端欄位支援後再送出。
+            {{ t('checkout.note') }}
           </p>
         </div>
 
         <ErrorState
           v-if="submitError"
-          title="訂單無法送出"
+          :title="t('cart.errorTitle')"
           :message="submitError"
-          retry-label="再試一次"
+          :retry-label="t('checkout.retry')"
           @retry="submitOrder"
         />
 
@@ -276,7 +278,7 @@ async function submitOrder() {
           :disabled="!canSubmit"
           @click="submitOrder"
         >
-          {{ isSubmitting ? '送出中' : '送出訂單' }}
+          {{ isSubmitting ? t('checkout.submitting') : t('checkout.submit') }}
         </button>
       </SectionCard>
     </div>

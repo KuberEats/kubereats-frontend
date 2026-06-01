@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RouteName } from '../../router'
+import { useI18n, type MessageKey } from '../../i18n'
 
 const props = defineProps<{
   activeRoute: RouteName
@@ -10,22 +11,26 @@ defineEmits<{
   navigate: [path: string]
 }>()
 
-const employeeItems = [
-  { label: '商家', path: '/merchants', routes: ['merchant-list', 'merchant-detail'] },
-  { label: '訂單', path: '/orders', routes: ['order-history', 'order-detail', 'reservation-status'] },
-  { label: '支出', path: '/staff/expenses', routes: ['staff-expenses'] },
-]
+const { t } = useI18n()
 
-function items() {
-  if (props.userRole === 'merchant') {
-    return [
-      { label: '後台', path: '/merchant/dashboard', routes: ['merchant-dashboard'] },
-      { label: '訂單', path: '/merchant/orders', routes: ['merchant-orders'] },
-    ]
-  }
-  if (props.userRole === 'committee') {
-    return [{ label: '審核', path: '/committee/review', routes: ['committee-review'] }]
-  }
+const employeeItems = [
+  { labelKey: 'app.nav.merchants', path: '/merchants', routes: ['merchant-list', 'merchant-detail'] },
+  { labelKey: 'app.nav.orders', path: '/orders', routes: ['order-history', 'order-detail', 'reservation-status'] },
+  { labelKey: 'app.nav.expenses', path: '/staff/expenses', routes: ['staff-expenses'] },
+] satisfies { labelKey: MessageKey; path: string; routes: RouteName[] }[]
+
+const merchantItems = [
+  { labelKey: 'app.nav.merchantDashboard', path: '/merchant/dashboard', routes: ['merchant-dashboard'] },
+  { labelKey: 'app.nav.todayOrders', path: '/merchant/orders', routes: ['merchant-orders'] },
+] satisfies { labelKey: MessageKey; path: string; routes: RouteName[] }[]
+
+const committeeItems = [
+  { labelKey: 'app.nav.review', path: '/committee/review', routes: ['committee-review'] },
+] satisfies { labelKey: MessageKey; path: string; routes: RouteName[] }[]
+
+function items(): { labelKey: MessageKey; path: string; routes: RouteName[] }[] {
+  if (props.userRole === 'merchant') return merchantItems
+  if (props.userRole === 'committee') return committeeItems
   return employeeItems
 }
 </script>
@@ -33,7 +38,7 @@ function items() {
 <template>
   <nav
     class="bottom-nav"
-    aria-label="手機主要導覽"
+    :aria-label="t('app.mobileNav')"
   >
     <button
       v-for="item in items()"
@@ -42,7 +47,7 @@ function items() {
       :class="{ active: item.routes.includes(activeRoute) }"
       @click="$emit('navigate', item.path)"
     >
-      {{ item.label }}
+      {{ t(item.labelKey) }}
     </button>
   </nav>
 </template>

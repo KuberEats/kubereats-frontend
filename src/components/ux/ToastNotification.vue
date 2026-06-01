@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { useI18n } from '../../i18n'
+
 withDefaults(defineProps<{
   message: string
   tone?: 'success' | 'error' | 'info'
 }>(), {
   tone: 'info',
 })
+
+const { t } = useI18n()
 
 defineEmits<{
   close: []
@@ -20,7 +24,7 @@ defineEmits<{
     <span>{{ message }}</span>
     <button
       type="button"
-      aria-label="關閉通知"
+      :aria-label="t('state.closeNotification')"
       @click="$emit('close')"
     >
       ×

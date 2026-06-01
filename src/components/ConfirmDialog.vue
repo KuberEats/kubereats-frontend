@@ -1,5 +1,8 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import { computed } from 'vue'
+import { useI18n } from '../i18n'
+
+const props = withDefaults(defineProps<{
   open: boolean
   title: string
   message: string
@@ -8,11 +11,15 @@ withDefaults(defineProps<{
   tone?: 'primary' | 'danger'
   loading?: boolean
 }>(), {
-  confirmLabel: '確認',
-  cancelLabel: '取消',
+  confirmLabel: undefined,
+  cancelLabel: undefined,
   tone: 'primary',
   loading: false,
 })
+
+const { t } = useI18n()
+const resolvedConfirmLabel = computed(() => props.confirmLabel || t('action.confirm'))
+const resolvedCancelLabel = computed(() => props.cancelLabel || t('action.cancel'))
 
 defineEmits<{
   confirm: []
@@ -48,7 +55,7 @@ defineEmits<{
             :disabled="loading"
             @click="$emit('cancel')"
           >
-            {{ cancelLabel }}
+            {{ resolvedCancelLabel }}
           </button>
           <button
             class="dialog-confirm"
@@ -58,7 +65,7 @@ defineEmits<{
             :disabled="loading"
             @click="$emit('confirm')"
           >
-            {{ loading ? '處理中...' : confirmLabel }}
+            {{ loading ? t('login.pending') : resolvedConfirmLabel }}
           </button>
         </div>
       </section>

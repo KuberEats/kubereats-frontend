@@ -67,6 +67,7 @@ Acceptance criteria:
 - `src/components/MerchantCard.vue`
 - `src/components/ux/*`
 - `src/composables/useCart.ts`
+- `src/i18n/index.ts`
 - `src/utils/formatters.ts`
 - `src/pages/LoginPage.vue`
 - `src/pages/MerchantListPage.vue`
@@ -81,6 +82,7 @@ Acceptance criteria:
 - `tests/e2e/mock-order-flow.spec.ts`
 - `package.json`
 - `.github/workflows/ci.yml`
+- `docs/frontend-i18n.md`
 
 ## UX Backlog
 
