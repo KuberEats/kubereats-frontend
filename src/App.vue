@@ -17,6 +17,7 @@ import CheckoutPage from './pages/CheckoutPage.vue'
 import OrderDetailPage from './pages/OrderDetailPage.vue'
 import OrderHistoryPage from './pages/OrderHistoryPage.vue'
 import ReservationStatusPage from './pages/ReservationStatusPage.vue'
+import ProfileOnboardingPage from './pages/ProfileOnboardingPage.vue'
 import AppShell from './components/ux/AppShell.vue'
 
 import { currentRoute, navigateTo } from './router'
@@ -24,6 +25,7 @@ import { clearTokens, getAccessToken } from './api/client'
 import { getMe } from './api/auth'
 import type { User } from './api/types'
 import { useI18n } from './i18n'
+import { hasCompletedCustomerProfile } from './composables/useCustomerProfile'
 
 const { t } = useI18n()
 
@@ -110,6 +112,15 @@ watch(
       return
     }
 
+    if (
+      authenticatedUser.value?.role === 'employee' &&
+      currentRoute.value.name !== 'profile-onboarding' &&
+      !hasCompletedCustomerProfile(authenticatedUser.value.id)
+    ) {
+      navigateTo('/profile/onboarding')
+      return
+    }
+
     if (currentRoute.value.name === 'login') {
       navigateTo(homePath.value)
     }
@@ -144,6 +155,7 @@ watch(
       <StaffExpensesPage v-else-if="currentRoute.name === 'staff-expenses'" />
       <FinanceReportPage v-else-if="currentRoute.name === 'merchant-finance-reports'" />
       <!-- 組員的頁面 -->
+      <ProfileOnboardingPage v-else-if="currentRoute.name === 'profile-onboarding'" />
       <MerchantListPage v-else-if="currentRoute.name === 'merchant-list'" />
       <CheckoutPage v-else-if="currentRoute.name === 'checkout'" />
       <MerchantDetailPage

@@ -64,6 +64,14 @@ function handleLocaleChange(event: Event) {
         {{ t('app.nav.expenses') }}
       </button>
       <button
+        v-if="userRole === 'employee'"
+        type="button"
+        :class="{ active: activeRoute === 'profile-onboarding' }"
+        @click="$emit('navigate', '/profile/onboarding')"
+      >
+        {{ t('app.nav.profile') }}
+      </button>
+      <button
         v-if="userRole === 'merchant'"
         type="button"
         :class="{ active: activeRoute === 'merchant-dashboard' }"

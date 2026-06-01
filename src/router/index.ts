@@ -8,6 +8,7 @@ export type RouteName =
   | 'merchant-finance'
   | 'merchant-finance-reports'
   | 'committee-review'
+  | 'profile-onboarding'
   | 'merchant-list'
   | 'merchant-detail'
   | 'checkout'
@@ -99,6 +100,9 @@ function parseRoute(path: string): AppRoute {
   }
   if (path === '/staff/expenses') {
     return { name: 'staff-expenses', params: {} }
+  }
+  if (path === '/profile/onboarding') {
+    return { name: 'profile-onboarding', params: {} }
   }
 
   // 組員的路由

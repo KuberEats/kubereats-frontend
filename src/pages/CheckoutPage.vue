@@ -3,7 +3,9 @@ import { computed, ref, shallowRef } from 'vue'
 import { ApiError } from '../api/client'
 import { createReservationRequest } from '../api/orders'
 import type { ReservationRequestPayload, ReservationRequestResponse } from '../api/types'
+import PresetNotesPicker from '../components/profile/PresetNotesPicker.vue'
 import { useCart } from '../composables/useCart'
+import { useCustomerProfile } from '../composables/useCustomerProfile'
 import { formatMoney } from '../utils/formatters'
 import EmptyState from '../components/ux/EmptyState.vue'
 import ErrorState from '../components/ux/ErrorState.vue'
@@ -18,14 +20,14 @@ import { navigateTo } from '../router'
 import { useI18n } from '../i18n'
 
 const cart = useCart()
+const customerProfile = useCustomerProfile()
 const isSubmitting = ref(false)
 const submitError = ref('')
 const successReservation = ref<ReservationRequestResponse | null>(null)
 const toastMessage = ref('')
-const dinerName = shallowRef('')
-const dinerPhone = shallowRef('')
 const comments = shallowRef('')
 const { t } = useI18n()
+customerProfile.load()
 
 const canSubmit = computed(() =>
   cart.items.value.length > 0 &&
@@ -52,6 +54,17 @@ function optionalText(value: string) {
   return normalized || undefined
 }
 
+function appendPresetNote(note: string) {
+  const currentNotes = comments.value
+    .split('\n')
+    .map(row => row.trim())
+    .filter(Boolean)
+
+  if (!currentNotes.includes(note)) {
+    comments.value = [...currentNotes, note].join('\n')
+  }
+}
+
 function buildPayload(): ReservationRequestPayload | null {
   if (!cart.merchantId.value) return null
   return {
@@ -61,8 +74,6 @@ function buildPayload(): ReservationRequestPayload | null {
     pickup_slot: cart.pickupSlot.value,
     pickup_option: 'SELF_PICKUP',
     comments: optionalText(comments.value),
-    diner_name: optionalText(dinerName.value),
-    diner_phone: optionalText(dinerPhone.value),
     items: cart.items.value.map(item => ({
       menu_id: item.menuItem.id,
       quantity: item.quantity,
@@ -138,8 +149,6 @@ async function submitOrder() {
     successReservation.value = reservation
     toastMessage.value = t('checkout.toastSuccess')
     cart.clearCart()
-    dinerName.value = ''
-    dinerPhone.value = ''
     comments.value = ''
     navigateTo(`/reservation-status/${encodeURIComponent(reservation.order_token)}`)
   } catch (error) {
@@ -273,25 +282,28 @@ async function submitOrder() {
               :disabled="isSubmitting"
             >
           </FormField>
-          <FormField :label="t('checkout.dinerName')">
-            <input
-              v-model="dinerName"
-              type="text"
-              autocomplete="name"
-              :placeholder="t('checkout.dinerNamePlaceholder')"
-              :disabled="isSubmitting"
+          <div class="profile-summary">
+            <div>
+              <p class="eyebrow">
+                {{ t('checkout.savedProfile') }}
+              </p>
+              <strong>{{ customerProfile.profile.value.displayName }}</strong>
+              <span>{{ customerProfile.profile.value.phone }}</span>
+            </div>
+            <button
+              class="ghost-button"
+              type="button"
+              @click="navigateTo('/profile/onboarding')"
             >
-          </FormField>
-          <FormField :label="t('checkout.dinerPhone')">
-            <input
-              v-model="dinerPhone"
-              type="tel"
-              autocomplete="tel"
-              :placeholder="t('checkout.dinerPhonePlaceholder')"
-              :disabled="isSubmitting"
-            >
-          </FormField>
+              {{ t('checkout.editProfile') }}
+            </button>
+          </div>
           <FormField :label="t('checkout.comments')">
+            <PresetNotesPicker
+              :notes="customerProfile.profile.value.commonNotes"
+              :disabled="isSubmitting"
+              @select="appendPresetNote"
+            />
             <textarea
               v-model="comments"
               rows="3"
@@ -370,6 +382,31 @@ async function submitOrder() {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  padding: 12px;
+}
+
+.profile-summary div {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-summary strong {
+  color: var(--color-text);
+}
+
+.profile-summary span {
+  color: var(--color-muted);
+  font-size: 14px;
 }
 
 @media (max-width: 860px) {

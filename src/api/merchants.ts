@@ -1,5 +1,13 @@
 import { apiRequest } from './client'
-import type { Campus, MenuItem, Merchant, MerchantInfo, SortKey, TodayOrderSummary } from './types'
+import type {
+  Campus,
+  DietaryType,
+  MenuItem,
+  Merchant,
+  MerchantInfo,
+  SortKey,
+  TodayOrderSummary,
+} from './types'
 
 // ── 組員的：員工端瀏覽商家 ──
 
@@ -79,6 +87,9 @@ export function createMenuItem(data: {
   price: number
   maxDailyQuantity: number
   imageId?: string
+  dietaryType?: DietaryType
+  allergens?: string[]
+  certifications?: string[]
 }): Promise<MenuItem> {
   return apiRequest<MenuItem>('/merchants/menu', {
     method: 'POST',
@@ -95,6 +106,9 @@ export function updateMenuItem(menuId: number, data: Partial<{
   price: number
   maxDailyQuantity: number
   imageId: string
+  dietaryType: DietaryType
+  allergens: string[]
+  certifications: string[]
 }>): Promise<MenuItem> {
   return apiRequest<MenuItem>(`/merchants/menu/${menuId}`, {
     method: 'PUT',

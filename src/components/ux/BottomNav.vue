@@ -17,6 +17,7 @@ const employeeItems = [
   { labelKey: 'app.nav.merchants', path: '/merchants', routes: ['merchant-list', 'merchant-detail'] },
   { labelKey: 'app.nav.orders', path: '/orders', routes: ['order-history', 'order-detail', 'reservation-status'] },
   { labelKey: 'app.nav.expenses', path: '/staff/expenses', routes: ['staff-expenses'] },
+  { labelKey: 'app.nav.profile', path: '/profile/onboarding', routes: ['profile-onboarding'] },
 ] satisfies { labelKey: MessageKey; path: string; routes: RouteName[] }[]
 
 const merchantItems = [
@@ -60,7 +61,7 @@ function items(): { labelKey: MessageKey; path: string; routes: RouteName[] }[] 
   left: 0;
   z-index: 40;
   display: none;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   border-top: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.98);

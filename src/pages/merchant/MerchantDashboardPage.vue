@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { getMyMerchant, listMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from '../../api/merchants'
 import { navigateTo } from '../../router'
-import type { MerchantInfo, MenuItem } from '../../api/types'
+import type { DietaryType, MerchantInfo, MenuItem } from '../../api/types'
 import ConfirmDialog from '../../components/ConfirmDialog.vue'
 
 const merchant = ref<MerchantInfo | null>(null)
@@ -14,13 +14,65 @@ const showAddForm = ref(false)
 const editingId = ref<number | null>(null)
 const pendingDeleteId = ref<number | null>(null)
 
-const newItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0 })
-const editItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0 })
+interface MenuFormState {
+  itemName: string
+  price: number
+  maxDailyQuantity: number
+  dietaryType: DietaryType
+  allergens: string[]
+  certifications: string[]
+}
+
+const dietaryOptions = [
+  { value: 'MEAT', label: '葷食' },
+  { value: 'VEGAN', label: '全素' },
+  { value: 'OVO_LACTO', label: '蛋奶素' },
+  { value: 'OVO', label: '蛋素' },
+  { value: 'LACTO', label: '奶素' },
+  { value: 'PESCATARIAN', label: '海鮮素' },
+] satisfies { value: DietaryType; label: string }[]
+
+const allergenOptions = ['花生', '堅果', '蛋', '奶', '麩質', '甲殼類', '魚', '大豆', '芝麻']
+const certificationOptions = ['SGS', 'HACCP', 'ISO 22000', '清真', '產銷履歷']
+
+const newItem = ref<MenuFormState>(createEmptyMenuForm())
+const editItem = ref<MenuFormState>(createEmptyMenuForm())
 
 const auditStatusText: Record<number, string> = {
   0: '待審核',
   1: '已通過',
   2: '已拒絕',
+}
+
+function createEmptyMenuForm(): MenuFormState {
+  return {
+    itemName: '',
+    price: 0,
+    maxDailyQuantity: 0,
+    dietaryType: 'MEAT',
+    allergens: [],
+    certifications: [],
+  }
+}
+
+function dietaryText(value: string | null | undefined) {
+  return dietaryOptions.find(option => option.value === value)?.label ?? '葷食'
+}
+
+function toggleValue(values: string[], value: string, checked: boolean) {
+  if (checked) {
+    return values.includes(value) ? values : [...values, value]
+  }
+  return values.filter(item => item !== value)
+}
+
+function updateMultiSelect(
+  target: MenuFormState,
+  field: 'allergens' | 'certifications',
+  value: string,
+  event: Event,
+) {
+  target[field] = toggleValue(target[field], value, (event.target as HTMLInputElement).checked)
 }
 
 onMounted(async () => {
@@ -46,7 +98,7 @@ async function handleAddItem() {
     const item = await createMenuItem(newItem.value)
     menuItems.value.push(item)
     showAddForm.value = false
-    newItem.value = { itemName: '', price: 0, maxDailyQuantity: 0 }
+    newItem.value = createEmptyMenuForm()
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '新增失敗'
   }
@@ -58,6 +110,9 @@ function startEdit(item: MenuItem) {
     itemName: item.itemName,
     price: item.price,
     maxDailyQuantity: item.maxDailyQuantity,
+    dietaryType: (item.dietaryType as DietaryType | undefined) ?? 'MEAT',
+    allergens: [...(item.allergens ?? [])],
+    certifications: [...(item.certifications ?? [])],
   }
 }
 
@@ -207,6 +262,15 @@ async function handleDeleteItem() {
               placeholder="每日限量"
               min="1"
             >
+            <select v-model="newItem.dietaryType">
+              <option
+                v-for="option in dietaryOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
             <button
               class="btn-primary btn-small"
               data-testid="merchant-menu-create-button"
@@ -214,6 +278,36 @@ async function handleDeleteItem() {
             >
               新增
             </button>
+          </div>
+          <div class="menu-meta-fields">
+            <fieldset>
+              <legend>過敏原</legend>
+              <label
+                v-for="allergen in allergenOptions"
+                :key="allergen"
+              >
+                <input
+                  type="checkbox"
+                  :checked="newItem.allergens.includes(allergen)"
+                  @change="updateMultiSelect(newItem, 'allergens', allergen, $event)"
+                >
+                {{ allergen }}
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>認證</legend>
+              <label
+                v-for="certification in certificationOptions"
+                :key="certification"
+              >
+                <input
+                  type="checkbox"
+                  :checked="newItem.certifications.includes(certification)"
+                  @change="updateMultiSelect(newItem, 'certifications', certification, $event)"
+                >
+                {{ certification }}
+              </label>
+            </fieldset>
           </div>
         </div>
 
@@ -246,6 +340,15 @@ async function handleDeleteItem() {
                 type="number"
                 placeholder="每日限量"
               >
+              <select v-model="editItem.dietaryType">
+                <option
+                  v-for="option in dietaryOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
               <button
                 class="btn-small btn-primary"
                 @click="handleUpdateItem(item.id)"
@@ -259,12 +362,51 @@ async function handleDeleteItem() {
                 取消
               </button>
             </div>
+            <div class="menu-meta-fields">
+              <fieldset>
+                <legend>過敏原</legend>
+                <label
+                  v-for="allergen in allergenOptions"
+                  :key="allergen"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="editItem.allergens.includes(allergen)"
+                    @change="updateMultiSelect(editItem, 'allergens', allergen, $event)"
+                  >
+                  {{ allergen }}
+                </label>
+              </fieldset>
+              <fieldset>
+                <legend>認證</legend>
+                <label
+                  v-for="certification in certificationOptions"
+                  :key="certification"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="editItem.certifications.includes(certification)"
+                    @change="updateMultiSelect(editItem, 'certifications', certification, $event)"
+                  >
+                  {{ certification }}
+                </label>
+              </fieldset>
+            </div>
           </template>
           <template v-else>
             <div class="menu-item-info">
               <strong>{{ item.itemName }}</strong>
               <span>${{ item.price }}</span>
               <span>每日限量 {{ item.maxDailyQuantity }} 份</span>
+              <span>{{ dietaryText(item.dietaryType) }}</span>
+              <div class="menu-badges">
+                <span
+                  v-for="badge in [...(item.allergens ?? []).map(allergen => `含${allergen}`), ...(item.certifications ?? [])]"
+                  :key="badge"
+                >
+                  {{ badge }}
+                </span>
+              </div>
             </div>
             <div class="menu-item-actions">
               <button
@@ -322,9 +464,16 @@ async function handleDeleteItem() {
 .section-header h3 { margin: 0; flex: 1; color: #333; }
 .form-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .form-row input { flex: 1; min-width: 100px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
+.form-row select { min-width: 120px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
 .menu-item { display: flex; justify-content: space-between; align-items: center; }
-.menu-item-info { display: flex; gap: 1rem; align-items: center; }
+.menu-item-info { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
 .menu-item-actions { display: flex; gap: 0.5rem; }
+.menu-meta-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 0.75rem; }
+.menu-meta-fields fieldset { border: 1px solid #ddd; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.75rem; }
+.menu-meta-fields legend { color: #555; font-size: 0.85rem; font-weight: 700; padding: 0 0.25rem; }
+.menu-meta-fields label { display: inline-flex; align-items: center; gap: 0.25rem; color: #555; font-size: 0.85rem; }
+.menu-badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.menu-badges span { background: #f0f0f0; border-radius: 4px; color: #666; font-size: 0.78rem; padding: 0.18rem 0.45rem; }
 .btn-primary { background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 0.4rem 0.75rem; }
 .btn-primary:hover { background: #c0392b; }
 .btn-small { padding: 0.4rem 0.75rem; border: 1px solid #ddd; border-radius: 4px; background: white; color: #333; cursor: pointer; font-size: 0.85rem; }
@@ -345,7 +494,9 @@ async function handleDeleteItem() {
   .finance-actions { flex-direction: column; }
   .form-row { flex-direction: column; align-items: stretch; }
   .form-row input,
+  .form-row select,
   .form-row button { width: 100%; }
+  .menu-meta-fields { grid-template-columns: 1fr; }
   .menu-item { align-items: stretch; flex-direction: column; gap: 0.75rem; }
   .menu-item-info { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
   .menu-item-actions { display: grid; grid-template-columns: 1fr 1fr; }

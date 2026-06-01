@@ -43,6 +43,14 @@ function seedCart() {
 beforeEach(() => {
   localStorage.clear()
   localStorage.setItem('user', JSON.stringify({ id: 1, role: 'employee' }))
+  localStorage.setItem('kubereatsCustomerProfile:1', JSON.stringify({
+    displayName: '王小明',
+    phone: '0912345678',
+    department: 'A 廠',
+    dietaryRestrictions: '不吃牛',
+    commonNotes: ['少冰', '餐點分開裝'],
+    onboardingCompleted: true,
+  }))
   vi.stubGlobal('crypto', { randomUUID: () => 'idem-key-1' })
   mocks.createReservationRequest.mockReset()
   mocks.navigateTo.mockReset()
@@ -61,8 +69,6 @@ describe('CheckoutPage', () => {
     })
 
     const wrapper = mount(CheckoutPage)
-    await wrapper.get('input[autocomplete="name"]').setValue('王小明')
-    await wrapper.get('input[autocomplete="tel"]').setValue('0912345678')
     await wrapper.get('textarea').setValue('少冰，餐點分開裝')
     await wrapper.get('[data-testid="checkout-submit-button"]').trigger('click')
     await flushPromises()
@@ -72,8 +78,6 @@ describe('CheckoutPage', () => {
         user_id: 1,
         merchant_id: 7,
         comments: '少冰，餐點分開裝',
-        diner_name: '王小明',
-        diner_phone: '0912345678',
         items: [{ menu_id: 11, quantity: 1 }],
       }),
       'idem-key-1',

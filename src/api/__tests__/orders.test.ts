@@ -43,8 +43,6 @@ const reservationPayload: ReservationRequestPayload = {
   pickup_slot: '12:00-12:30',
   pickup_option: 'SELF_PICKUP',
   comments: '少冰，餐點分開裝',
-  diner_name: '王小明',
-  diner_phone: '0912345678',
   items: [{ menu_id: 11, quantity: 2 }],
 }
 

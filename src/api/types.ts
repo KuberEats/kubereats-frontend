@@ -4,6 +4,7 @@ export type UserRole = 'employee' | 'merchant' | 'committee'
 export type Campus = '竹科' | '南科' | '中科' | '高科'
 export type SortKey = 'people' | 'popular' | 'recommend'
 export type OrderHistorySortKey = 'time' | 'merchant'
+export type DietaryType = 'MEAT' | 'VEGAN' | 'OVO_LACTO' | 'OVO' | 'LACTO' | 'PESCATARIAN'
 
 // ── Auth ──
 
@@ -73,6 +74,9 @@ export interface MenuItem {
   price: number
   maxDailyQuantity: number
   imageId: string | null
+  dietaryType?: DietaryType | string | null
+  allergens?: string[]
+  certifications?: string[]
   category?: string | null
   description?: string | null
   isAvailable?: boolean
@@ -105,8 +109,6 @@ export interface ReservationRequestPayload {
   pickup_slot: string
   pickup_option: PickupOption
   comments?: string
-  diner_name?: string
-  diner_phone?: string
   items: {
     menu_id: number
     quantity: number
