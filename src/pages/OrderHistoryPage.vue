@@ -2,31 +2,50 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { getReservationStatus, listOrders } from '../api/orders'
 import type { Order, OrderHistorySortKey, ReservationStatus, ReservationStatusResponse } from '../api/types'
+import EmptyState from '../components/ux/EmptyState.vue'
+import ErrorState from '../components/ux/ErrorState.vue'
+import LoadingState from '../components/ux/LoadingState.vue'
+import PageHeader from '../components/ux/PageHeader.vue'
+import PriceText from '../components/ux/PriceText.vue'
+import StatusBadge from '../components/ux/StatusBadge.vue'
+import { formatDateTime } from '../utils/formatters'
 import { navigateTo } from '../router'
-
-const CURRENT_USER_ID = 1
 
 const sortOptions: { label: string; value: OrderHistorySortKey }[] = [
   { label: '依時間', value: 'time' },
   { label: '依商家', value: 'merchant' },
 ]
 
+const statusFilters = [
+  { label: '全部', value: 'all' },
+  { label: '處理中', value: 'processing' },
+  { label: '完成', value: 'done' },
+  { label: '取消', value: 'cancelled' },
+]
+
 const selectedSort = ref<OrderHistorySortKey>('time')
+const selectedStatus = ref('all')
 const orders = ref<Order[]>([])
 const latestReservation = ref<ReservationStatusResponse | null>(null)
 const isLoading = ref(false)
 const errorMessage = ref('')
 
-const orderCount = computed(() => orders.value.length)
+const visibleOrders = computed(() =>
+  orders.value.filter(order => {
+    if (selectedStatus.value === 'done') return order.orderStatus === 1
+    if (selectedStatus.value === 'cancelled') return order.orderStatus === 2
+    if (selectedStatus.value === 'processing') return order.orderStatus === 0
+    return true
+  }),
+)
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
+function currentUserId() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}') as { id?: number }
+    return user.id || 1
+  } catch {
+    return 1
+  }
 }
 
 function merchantNames(order: Order) {
@@ -40,6 +59,12 @@ function statusLabel(status: number) {
   return '處理中'
 }
 
+function statusTone(status: number): 'success' | 'warning' | 'danger' {
+  if (status === 1) return 'success'
+  if (status === 2) return 'danger'
+  return 'warning'
+}
+
 function reservationStatusLabel(status: ReservationStatus) {
   if (status === 'PENDING_RESERVATION' || status === 'PROCESSING') return '確認中'
   if (status === 'RESERVED') return '已保留'
@@ -47,6 +72,12 @@ function reservationStatusLabel(status: ReservationStatus) {
   if (status === 'CANCELLED') return '已取消'
   if (status === 'EXPIRED') return '已逾時'
   return '失敗'
+}
+
+function reservationTone(status: ReservationStatus): 'success' | 'warning' | 'danger' {
+  if (status === 'RESERVED') return 'success'
+  if (status === 'PENDING_RESERVATION' || status === 'PROCESSING') return 'warning'
+  return 'danger'
 }
 
 function reservationMerchantName(reservation: ReservationStatusResponse) {
@@ -62,7 +93,7 @@ async function fetchOrders() {
   errorMessage.value = ''
 
   try {
-    orders.value = await listOrders(CURRENT_USER_ID, selectedSort.value)
+    orders.value = await listOrders(currentUserId(), selectedSort.value)
     const latestOrderToken = localStorage.getItem('latestReservationOrderToken')
     if (latestOrderToken) {
       try {
@@ -84,13 +115,27 @@ watch(selectedSort, fetchOrders)
 
 <template>
   <main class="page">
-    <section class="history-header">
-      <div>
-        <p class="eyebrow">
-          Order History
-        </p>
-        <h1>歷史訂單</h1>
-        <p>共 {{ orderCount }} 筆訂單</p>
+    <PageHeader
+      eyebrow="Order History"
+      title="歷史訂單"
+      :subtitle="`共 ${visibleOrders.length} 筆符合條件的訂單`"
+    />
+
+    <section class="search-panel">
+      <div
+        class="filter-bar compact"
+        aria-label="訂單狀態篩選"
+      >
+        <button
+          v-for="filter in statusFilters"
+          :key="filter.value"
+          class="pill-button"
+          :class="{ active: selectedStatus === filter.value }"
+          type="button"
+          @click="selectedStatus = filter.value"
+        >
+          {{ filter.label }}
+        </button>
       </div>
 
       <div
@@ -110,19 +155,19 @@ watch(selectedSort, fetchOrders)
       </div>
     </section>
 
-    <p
+    <ErrorState
       v-if="errorMessage"
-      class="status-message error"
-    >
-      {{ errorMessage }}
-    </p>
+      :message="errorMessage"
+      retry-label="重新載入"
+      @retry="fetchOrders"
+    />
 
-    <p
+    <LoadingState
       v-else-if="isLoading"
-      class="status-message"
-    >
-      歷史訂單載入中。
-    </p>
+      variant="list"
+      :rows="3"
+      label="歷史訂單載入中"
+    />
 
     <template v-else>
       <section
@@ -130,8 +175,9 @@ watch(selectedSort, fetchOrders)
         class="history-list"
         aria-label="近期預訂列表"
       >
-        <article
+        <button
           class="history-order-row"
+          type="button"
           @click="navigateTo(`/reservation-status/${encodeURIComponent(latestReservation.order_token)}`)"
         >
           <div class="history-order-main">
@@ -141,7 +187,10 @@ watch(selectedSort, fetchOrders)
               </p>
               <h2>{{ reservationMerchantName(latestReservation) }}</h2>
             </div>
-            <span class="status-badge">{{ reservationStatusLabel(latestReservation.status) }}</span>
+            <StatusBadge
+              :label="reservationStatusLabel(latestReservation.status)"
+              :tone="reservationTone(latestReservation.status)"
+            />
           </div>
 
           <div class="history-order-meta">
@@ -152,17 +201,19 @@ watch(selectedSort, fetchOrders)
               取餐號碼 {{ latestReservation.pickup_number }}
             </strong>
           </div>
-        </article>
+        </button>
       </section>
 
       <section
+        v-if="visibleOrders.length > 0"
         class="history-list"
         aria-label="歷史訂單列表"
       >
-        <article
-          v-for="order in orders"
+        <button
+          v-for="order in visibleOrders"
           :key="order.id"
           class="history-order-row"
+          type="button"
           @click="navigateTo(`/orders/${order.id}`)"
         >
           <div class="history-order-main">
@@ -172,23 +223,28 @@ watch(selectedSort, fetchOrders)
               </p>
               <h2>{{ merchantNames(order) }}</h2>
             </div>
-            <span class="status-badge">{{ statusLabel(order.orderStatus) }}</span>
+            <StatusBadge
+              :label="statusLabel(order.orderStatus)"
+              :tone="statusTone(order.orderStatus)"
+            />
           </div>
 
           <div class="history-order-meta">
-            <span>{{ formatDate(order.orderTime) }}</span>
+            <span>{{ formatDateTime(order.orderTime) }}</span>
             <span>{{ order.items.length }} 項餐點</span>
-            <strong>${{ order.totalAmount }}</strong>
+            <strong><PriceText :value="order.totalAmount" /></strong>
           </div>
-        </article>
-
-        <p
-          v-if="orders.length === 0"
-          class="empty-state"
-        >
-          目前還沒有歷史訂單。
-        </p>
+        </button>
       </section>
+
+      <EmptyState
+        v-else
+        icon="?"
+        title="目前沒有符合條件的訂單"
+        description="完成訂餐後，訂單會出現在這裡。"
+        action-label="去找商家"
+        @action="navigateTo('/merchants')"
+      />
     </template>
   </main>
 </template>

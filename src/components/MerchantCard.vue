@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Merchant } from '../api/types'
+import PriceText from './ux/PriceText.vue'
+import StatusBadge from './ux/StatusBadge.vue'
 
 defineProps<{
   merchant: Merchant
@@ -11,10 +13,12 @@ defineEmits<{
 </script>
 
 <template>
-  <article
+  <button
     class="merchant-card"
+    type="button"
     :data-testid="`merchant-card-${merchant.id}`"
     :data-merchant-name="merchant.name"
+    :aria-label="`查看 ${merchant.name} 菜單`"
     @click="$emit('select', merchant.id)"
   >
     <div class="merchant-image">
@@ -28,13 +32,31 @@ defineEmits<{
           <p>{{ merchant.category }}</p>
         </div>
 
-        <span class="rating">★ {{ merchant.rating }}</span>
+        <div class="merchant-badges">
+          <StatusBadge
+            :label="merchant.isOpen === false ? '暫停接單' : '可訂餐'"
+            :tone="merchant.isOpen === false ? 'warning' : 'success'"
+          />
+          <span
+            v-if="merchant.rating"
+            class="rating"
+          >
+            ★ {{ merchant.rating }}
+          </span>
+        </div>
       </div>
 
+      <p
+        v-if="merchant.description"
+        class="merchant-description"
+      >
+        {{ merchant.description }}
+      </p>
+
       <div class="merchant-meta">
-        <span>{{ merchant.orderCount }} 人訂過</span>
-        <span v-if="merchant.minOrder !== undefined">低消 ${{ merchant.minOrder }}</span>
-        <span>{{ merchant.deliveryTime }}</span>
+        <span v-if="merchant.orderCount !== undefined">{{ merchant.orderCount }} 人訂過</span>
+        <span v-if="merchant.minOrder !== undefined">低消 <PriceText :value="merchant.minOrder" /></span>
+        <span v-if="merchant.deliveryTime">{{ merchant.deliveryTime }}</span>
         <span v-if="merchant.score !== undefined">推薦分數 {{ merchant.score }}</span>
       </div>
 
@@ -54,5 +76,25 @@ defineEmits<{
         {{ merchant.reason }}
       </p>
     </div>
-  </article>
+  </button>
 </template>
+
+<style scoped>
+.merchant-card {
+  width: 100%;
+  color: inherit;
+  text-align: left;
+}
+
+.merchant-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.merchant-description {
+  margin-top: 8px;
+  color: var(--color-muted);
+}
+</style>

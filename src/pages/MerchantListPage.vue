@@ -2,20 +2,27 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { listMerchants, recommendMerchants } from '../api/merchants'
 import type { Campus, Merchant, SortKey } from '../api/types'
+import EmptyState from '../components/ux/EmptyState.vue'
+import ErrorState from '../components/ux/ErrorState.vue'
+import LoadingState from '../components/ux/LoadingState.vue'
+import PageHeader from '../components/ux/PageHeader.vue'
 import MerchantCard from '../components/MerchantCard.vue'
 import { navigateTo } from '../router'
 
 const campuses: Campus[] = ['竹科', '南科', '中科', '高科']
 
-const sortOptions: { label: string; value: SortKey }[] = [
+const sortOptions: { label: string; value: SortKey | 'name' }[] = [
+  { label: '系統推薦', value: 'recommend' },
   { label: '最多人美食', value: 'people' },
   { label: '最常美食', value: 'popular' },
-  { label: '系統推薦', value: 'recommend' },
+  { label: '名稱排序', value: 'name' },
 ]
 
 const selectedCampus = ref<Campus>('竹科')
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
-const selectedSort = ref<SortKey>('people')
+const selectedSort = ref<SortKey | 'name'>('people')
+const selectedFilter = ref('all')
+const searchQuery = ref('')
 const merchants = ref<Merchant[]>([])
 const isLoading = ref(false)
 const isRecommendationLoading = ref(false)
@@ -25,12 +32,48 @@ const lastRecommendationPrompt = ref('')
 const isRecommendationDialogOpen = ref(false)
 const isRecommendationMode = ref(false)
 
-const currentListLabel = computed(() => {
-  if (isRecommendationMode.value && lastRecommendationPrompt.value) {
-    return `系統推薦：${lastRecommendationPrompt.value}`
-  }
+const categoryFilters = computed(() => {
+  const categories = new Set(merchants.value.map(merchant => merchant.category).filter(Boolean))
+  return Array.from(categories).slice(0, 6)
+})
 
-  return '店家列表'
+const filterChips = computed(() => [
+  { label: '全部', value: 'all' },
+  { label: '營業中', value: 'open' },
+  { label: '熱門', value: 'hot' },
+  ...categoryFilters.value.map(category => ({ label: category, value: category })),
+])
+
+const visibleMerchants = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+
+  return merchants.value
+    .filter(merchant => {
+      if (selectedFilter.value === 'open' && merchant.isOpen === false) return false
+      if (selectedFilter.value === 'hot' && (merchant.orderCount ?? 0) < 50) return false
+      if (
+        selectedFilter.value !== 'all' &&
+        selectedFilter.value !== 'open' &&
+        selectedFilter.value !== 'hot' &&
+        merchant.category !== selectedFilter.value
+      ) {
+        return false
+      }
+
+      if (!query) return true
+      const searchable = [
+        merchant.name,
+        merchant.category,
+        merchant.campus,
+        merchant.reason,
+        ...(merchant.tags || []),
+      ].join(' ').toLowerCase()
+      return searchable.includes(query)
+    })
+    .sort((a, b) => {
+      if (selectedSort.value === 'name') return a.name.localeCompare(b.name, 'zh-Hant')
+      return 0
+    })
 })
 
 async function fetchMerchants() {
@@ -45,7 +88,7 @@ async function fetchMerchants() {
     merchants.value = await listMerchants(
       selectedCampus.value,
       selectedDate.value,
-      selectedSort.value,
+      selectedSort.value === 'name' ? 'popular' : selectedSort.value,
     )
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '商家資料讀取失敗'
@@ -54,20 +97,34 @@ async function fetchMerchants() {
   }
 }
 
-function selectSort(sort: SortKey) {
+function selectSort(sort: SortKey | 'name') {
+  selectedSort.value = sort
   if (sort === 'recommend') {
-    selectedSort.value = sort
     isRecommendationDialogOpen.value = true
     errorMessage.value = ''
-    return
   }
+}
 
-  selectedSort.value = sort
+function clearFilters() {
+  searchQuery.value = ''
+  selectedFilter.value = 'all'
 }
 
 function closeRecommendationDialog() {
   if (isRecommendationLoading.value) return
   isRecommendationDialogOpen.value = false
+  if (merchants.value.length === 0) {
+    selectedSort.value = 'people'
+  }
+}
+
+function currentUserId() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}') as { id?: number }
+    return user.id || 1
+  } catch {
+    return 1
+  }
 }
 
 async function submitRecommendationPrompt() {
@@ -83,10 +140,10 @@ async function submitRecommendationPrompt() {
 
   try {
     merchants.value = await recommendMerchants({
-      userId: 1,
+      userId: currentUserId(),
       campus: selectedCampus.value,
       prompt,
-      limit: 5,
+      limit: 8,
     })
     lastRecommendationPrompt.value = prompt
     isRecommendationMode.value = true
@@ -104,56 +161,81 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
 
 <template>
   <main class="page">
-    <header class="page-header">
-      <nav
-        class="campus-tabs"
-        aria-label="園區分類"
-      >
-        <button
-          v-for="campus in campuses"
-          :key="campus"
-          class="pill-button"
-          :class="{ active: selectedCampus === campus }"
-          type="button"
-          @click="selectedCampus = campus"
-        >
-          {{ campus }}
-        </button>
-      </nav>
-
-      <label class="date-picker">
-        <span>日期</span>
-        <input
-          v-model="selectedDate"
-          type="date"
-        >
-      </label>
-    </header>
-
-    <section class="hero-panel">
-      <div>
-        <p class="eyebrow">
-          KuberEats Order
-        </p>
-        <h1>{{ selectedCampus }} 今日訂餐</h1>
-        <p>選擇日期、園區與排序方式，或輸入一句話讓系統推薦適合的店家。</p>
-      </div>
-    </section>
+    <PageHeader
+      eyebrow="KuberEats Order"
+      :title="`${selectedCampus} 今日訂餐`"
+      subtitle="搜尋店名、分類或標籤，快速找到今天想吃的餐點。"
+    >
+      <template #action>
+        <label class="date-picker">
+          <span>日期</span>
+          <input
+            v-model="selectedDate"
+            type="date"
+            aria-label="訂餐日期"
+          >
+        </label>
+      </template>
+    </PageHeader>
 
     <section
-      class="filter-bar"
-      aria-label="排序篩選"
+      class="campus-tabs"
+      aria-label="園區分類"
     >
       <button
-        v-for="option in sortOptions"
-        :key="option.value"
+        v-for="campus in campuses"
+        :key="campus"
         class="pill-button"
-        :class="{ active: selectedSort === option.value }"
+        :class="{ active: selectedCampus === campus }"
         type="button"
-        @click="selectSort(option.value)"
+        @click="selectedCampus = campus"
       >
-        {{ option.label }}
+        {{ campus }}
       </button>
+    </section>
+
+    <section class="search-panel">
+      <label class="search-box">
+        <span class="sr-only">搜尋商家</span>
+        <input
+          v-model="searchQuery"
+          type="search"
+          placeholder="搜尋店名、分類、標籤"
+          aria-label="搜尋商家"
+        >
+      </label>
+
+      <div
+        class="filter-bar compact"
+        aria-label="快速篩選"
+      >
+        <button
+          v-for="chip in filterChips"
+          :key="chip.value"
+          class="pill-button"
+          :class="{ active: selectedFilter === chip.value }"
+          type="button"
+          @click="selectedFilter = chip.value"
+        >
+          {{ chip.label }}
+        </button>
+      </div>
+
+      <div
+        class="filter-bar compact"
+        aria-label="排序"
+      >
+        <button
+          v-for="option in sortOptions"
+          :key="option.value"
+          class="pill-button"
+          :class="{ active: selectedSort === option.value }"
+          type="button"
+          @click="selectSort(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      </div>
     </section>
 
     <section
@@ -164,7 +246,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
         <p class="eyebrow">
           Recommendation
         </p>
-        <h2>{{ currentListLabel }}</h2>
+        <h2>系統推薦：{{ lastRecommendationPrompt }}</h2>
       </div>
       <button
         class="ghost-button"
@@ -175,39 +257,41 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
       </button>
     </section>
 
-    <p
+    <ErrorState
       v-if="errorMessage"
-      class="status-message error"
-    >
-      {{ errorMessage }}
-    </p>
+      :message="errorMessage"
+      retry-label="重新載入"
+      @retry="fetchMerchants"
+    />
 
-    <p
+    <LoadingState
       v-else-if="isLoading"
-      class="status-message"
-    >
-      商家載入中。
-    </p>
+      variant="list"
+      :rows="4"
+      label="商家載入中"
+    />
 
     <section
-      v-else
+      v-else-if="visibleMerchants.length > 0"
       class="merchant-list"
       aria-label="店家列表"
     >
       <MerchantCard
-        v-for="merchant in merchants"
+        v-for="merchant in visibleMerchants"
         :key="merchant.id"
         :merchant="merchant"
         @select="navigateTo(`/merchants/${$event}`)"
       />
-
-      <p
-        v-if="merchants.length === 0"
-        class="empty-state"
-      >
-        目前這個園區還沒有可訂店家。
-      </p>
     </section>
+
+    <EmptyState
+      v-else
+      icon="?"
+      title="找不到符合條件的商家"
+      description="試著清除搜尋或切換園區、分類。"
+      action-label="清除篩選"
+      @action="clearFilters"
+    />
 
     <div
       v-if="isRecommendationDialogOpen"
@@ -244,7 +328,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
           v-model="recommendationPrompt"
           class="recommendation-input"
           rows="4"
-          placeholder="例如：今天想吃清爽一點，不要牛肉，最好是最近沒吃過的，150 以下"
+          placeholder="例如：今天想吃清爽一點，不要牛肉，最好 150 以下"
           @keydown.meta.enter.prevent="submitRecommendationPrompt"
           @keydown.ctrl.enter.prevent="submitRecommendationPrompt"
         />
@@ -263,3 +347,33 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
     </div>
   </main>
 </template>
+
+<style scoped>
+.search-panel {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 14px;
+}
+
+.search-box input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.merchant-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .merchant-list {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

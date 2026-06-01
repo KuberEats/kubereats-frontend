@@ -35,7 +35,10 @@ async function handleSubmit() {
     const userRole = payload.role as UserRole
     localStorage.setItem('user', JSON.stringify({ id: Number(payload.sub), role: userRole }))
 
-    if (userRole === 'merchant') {
+    const returnUrl = getReturnUrl()
+    if (returnUrl && returnUrl !== '/login') {
+      navigateTo(returnUrl)
+    } else if (userRole === 'merchant') {
       navigateTo('/merchant/dashboard')
     } else if (userRole === 'committee') {
       navigateTo('/committee/review')
@@ -47,6 +50,15 @@ async function handleSubmit() {
   } finally {
     loading.value = false
   }
+}
+
+function getReturnUrl() {
+  const hashPath = window.location.hash.startsWith('#/')
+    ? window.location.hash.slice(1)
+    : window.location.pathname
+  const query = hashPath.split('?')[1]
+  if (!query) return ''
+  return new URLSearchParams(query).get('returnUrl') || ''
 }
 </script>
 
