@@ -25,7 +25,7 @@ defineProps<{
   </label>
 </template>
 
-<style scoped>
+<style>
 .form-field {
   display: grid;
   gap: 6px;
@@ -34,9 +34,9 @@ defineProps<{
   font-weight: 700;
 }
 
-.form-field :deep(input),
-.form-field :deep(select),
-.form-field :deep(textarea) {
+.form-field input,
+.form-field select,
+.form-field textarea {
   width: 100%;
   min-height: 42px;
   border: 1px solid var(--color-border);
@@ -46,9 +46,9 @@ defineProps<{
   padding: 9px 12px;
 }
 
-.form-field :deep(input:focus),
-.form-field :deep(select:focus),
-.form-field :deep(textarea:focus) {
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
   border-color: var(--color-accent);
   outline: 3px solid var(--color-accent-soft);
 }
