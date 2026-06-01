@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:merchant-seed": "playwright test tests/e2e/merchant-onboarding-seed.spec.ts",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "seed:e2e-data": "node scripts/seed-e2e-data.mjs",

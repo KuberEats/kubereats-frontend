@@ -40,12 +40,14 @@ async function handleSubmit() {
     <h2>商家申請加入平台</h2>
     <form
       class="apply-form"
+      data-testid="merchant-apply-form"
       @submit.prevent="handleSubmit"
     >
       <div class="form-group">
         <label>商家名稱</label>
         <input
           v-model="form.merchantName"
+          data-testid="merchant-apply-name-input"
           type="text"
           required
         >
@@ -54,6 +56,7 @@ async function handleSubmit() {
         <label>廠區</label>
         <select
           v-model="form.campus"
+          data-testid="merchant-apply-campus-select"
           required
         >
           <option
@@ -80,6 +83,7 @@ async function handleSubmit() {
         <label>分類</label>
         <input
           v-model="form.category"
+          data-testid="merchant-apply-category-input"
           type="text"
           placeholder="例如：便當、麵食"
           required
@@ -89,6 +93,7 @@ async function handleSubmit() {
         <label>最低訂購金額</label>
         <input
           v-model.number="form.minOrder"
+          data-testid="merchant-apply-min-order-input"
           type="number"
           min="0"
         >
@@ -97,6 +102,7 @@ async function handleSubmit() {
         <label>最多訂購數量</label>
         <input
           v-model.number="form.maxOrderQuantity"
+          data-testid="merchant-apply-max-order-quantity-input"
           type="number"
           min="0"
           placeholder="0 表示不限制"
@@ -106,6 +112,7 @@ async function handleSubmit() {
         <label>配送時間</label>
         <input
           v-model="form.deliveryTime"
+          data-testid="merchant-apply-delivery-time-input"
           type="text"
           placeholder="例如：30分鐘"
           required
@@ -115,6 +122,7 @@ async function handleSubmit() {
         <label>標籤（逗號分隔）</label>
         <input
           v-model="form.tags"
+          data-testid="merchant-apply-tags-input"
           type="text"
           placeholder="例如：便當, 台式, 健康"
         >
@@ -135,6 +143,7 @@ async function handleSubmit() {
       <button
         type="submit"
         class="btn-primary"
+        data-testid="merchant-apply-submit-button"
         :disabled="loading"
       >
         {{ loading ? '送出中...' : '送出申請' }}

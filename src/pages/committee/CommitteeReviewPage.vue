@@ -74,12 +74,14 @@ onMounted(loadMerchants)
     <div class="tabs">
       <button
         :class="['tab', { active: tab === 'pending' }]"
+        data-testid="committee-pending-tab"
         @click="switchTab('pending')"
       >
         待審核
       </button>
       <button
         :class="['tab', { active: tab === 'all' }]"
+        data-testid="committee-all-tab"
         @click="switchTab('all')"
       >
         全部商家
@@ -108,6 +110,7 @@ onMounted(loadMerchants)
         v-for="m in merchants"
         :key="m.id"
         class="card merchant-card"
+        :data-merchant-name="m.merchantName"
       >
         <div class="merchant-header">
           <h3>{{ m.merchantName }}</h3>
@@ -141,12 +144,14 @@ onMounted(loadMerchants)
         >
           <button
             class="btn-approve"
+            data-testid="committee-approve-button"
             @click="askApprove(m)"
           >
             通過
           </button>
           <button
             class="btn-reject"
+            data-testid="committee-reject-button"
             @click="askReject(m)"
           >
             拒絕

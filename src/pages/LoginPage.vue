@@ -87,7 +87,10 @@ async function handleSubmit() {
           class="form-group"
         >
           <label>角色</label>
-          <select v-model="role">
+          <select
+            v-model="role"
+            data-testid="auth-role-select"
+          >
             <option value="employee">
               員工
             </option>

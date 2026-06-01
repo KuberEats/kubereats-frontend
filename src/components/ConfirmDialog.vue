@@ -30,6 +30,7 @@ defineEmits<{
     >
       <section
         class="dialog-panel"
+        data-testid="confirm-dialog"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="`${title}-title`"
@@ -42,6 +43,7 @@ defineEmits<{
         <div class="dialog-actions">
           <button
             class="dialog-cancel"
+            data-testid="confirm-dialog-cancel-button"
             type="button"
             :disabled="loading"
             @click="$emit('cancel')"
@@ -51,6 +53,7 @@ defineEmits<{
           <button
             class="dialog-confirm"
             :class="tone"
+            data-testid="confirm-dialog-confirm-button"
             type="button"
             :disabled="loading"
             @click="$emit('confirm')"

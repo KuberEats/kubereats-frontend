@@ -105,7 +105,9 @@ async function handleDeleteItem() {
 
     <template v-else-if="merchant">
       <div class="merchant-info card">
-        <h2>{{ merchant.merchantName }}</h2>
+        <h2 data-testid="merchant-dashboard-name">
+          {{ merchant.merchantName }}
+        </h2>
         <div class="info-grid">
           <span>廠區：{{ merchant.campus }}</span>
           <span>分類：{{ merchant.category }}</span>
@@ -114,6 +116,7 @@ async function handleDeleteItem() {
           <span>最多訂購數量：{{ merchant.maxOrderQuantity === 0 ? '不限' : merchant.maxOrderQuantity }}</span>
           <span
             class="status"
+            data-testid="merchant-audit-status"
             :class="'status-' + merchant.auditStatus"
           >
             狀態：{{ auditStatusText[merchant.auditStatus] ?? '未知' }}
@@ -166,6 +169,7 @@ async function handleDeleteItem() {
           <h3>菜單管理</h3>
           <button
             class="btn-small"
+            data-testid="merchant-add-menu-toggle"
             @click="showAddForm = !showAddForm"
           >
             {{ showAddForm ? '取消' : '+ 新增菜品' }}
@@ -181,26 +185,31 @@ async function handleDeleteItem() {
         <div
           v-if="showAddForm"
           class="card add-form"
+          data-testid="merchant-add-menu-form"
         >
           <div class="form-row">
             <input
               v-model="newItem.itemName"
+              data-testid="merchant-menu-name-input"
               placeholder="品名"
             >
             <input
               v-model.number="newItem.price"
+              data-testid="merchant-menu-price-input"
               type="number"
               placeholder="價格"
               min="1"
             >
             <input
               v-model.number="newItem.maxDailyQuantity"
+              data-testid="merchant-menu-capacity-input"
               type="number"
               placeholder="每日限量"
               min="1"
             >
             <button
               class="btn-primary btn-small"
+              data-testid="merchant-menu-create-button"
               @click="handleAddItem"
             >
               新增
@@ -219,6 +228,7 @@ async function handleDeleteItem() {
           v-for="item in menuItems"
           :key="item.id"
           class="card menu-item"
+          :data-menu-item-name="item.itemName"
         >
           <template v-if="editingId === item.id">
             <div class="form-row">
