@@ -10,10 +10,12 @@ const username = ref('')
 const password = ref('')
 const role = ref<UserRole>('employee')
 const error = ref('')
+const successMessage = ref('')
 const loading = ref(false)
 
 async function handleSubmit() {
   error.value = ''
+  successMessage.value = ''
   loading.value = true
 
   try {
@@ -21,7 +23,8 @@ async function handleSubmit() {
       await register(username.value, password.value, role.value)
       isRegister.value = false
       error.value = ''
-      alert('註冊成功，請登入')
+      password.value = ''
+      successMessage.value = '註冊成功，請登入。'
       return
     }
 
@@ -99,6 +102,14 @@ async function handleSubmit() {
           {{ error }}
         </p>
 
+        <p
+          v-if="successMessage"
+          class="success-text"
+          role="status"
+        >
+          {{ successMessage }}
+        </p>
+
         <button
           type="submit"
           class="btn-primary"
@@ -113,7 +124,7 @@ async function handleSubmit() {
         <button
           type="button"
           class="link-button"
-          @click="isRegister = !isRegister"
+          @click="isRegister = !isRegister; error = ''; successMessage = ''"
         >
           {{ isRegister ? '登入' : '註冊' }}
         </button>
@@ -182,6 +193,7 @@ async function handleSubmit() {
 .btn-primary:hover { background: #c0392b; }
 .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
 .error-text { color: #e74c3c; font-size: 0.875rem; margin-bottom: 0.5rem; }
+.success-text { color: #047857; font-size: 0.875rem; margin-bottom: 0.5rem; }
 .toggle-text { text-align: center; margin-top: 1rem; color: #666; }
 .link-button {
   background: none;

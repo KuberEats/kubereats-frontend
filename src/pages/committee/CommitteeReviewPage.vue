@@ -2,11 +2,14 @@
 import { onMounted, ref } from 'vue'
 import { listPendingMerchants, listAllMerchants, approveMerchant, rejectMerchant } from '../../api/committee'
 import type { MerchantInfo } from '../../api/types'
+import ConfirmDialog from '../../components/ConfirmDialog.vue'
 
 const tab = ref<'pending' | 'all'>('pending')
 const merchants = ref<MerchantInfo[]>([])
 const error = ref('')
 const loading = ref(true)
+const reviewing = ref(false)
+const pendingReview = ref<{ id: number; action: 'approve' | 'reject'; name: string } | null>(null)
 
 const auditStatusText: Record<number, string> = {
   0: '待審核',
@@ -28,23 +31,31 @@ async function loadMerchants() {
   }
 }
 
-async function handleApprove(id: number) {
-  if (!confirm('確定通過此商家？')) return
-  try {
-    await approveMerchant(id)
-    await loadMerchants()
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : '審核失敗'
-  }
+function askApprove(merchant: MerchantInfo) {
+  pendingReview.value = { id: merchant.id, action: 'approve', name: merchant.merchantName }
 }
 
-async function handleReject(id: number) {
-  if (!confirm('確定拒絕此商家？')) return
+function askReject(merchant: MerchantInfo) {
+  pendingReview.value = { id: merchant.id, action: 'reject', name: merchant.merchantName }
+}
+
+async function handleReview() {
+  if (!pendingReview.value) return
+  reviewing.value = true
+  error.value = ''
+
   try {
-    await rejectMerchant(id)
+    if (pendingReview.value.action === 'approve') {
+      await approveMerchant(pendingReview.value.id)
+    } else {
+      await rejectMerchant(pendingReview.value.id)
+    }
+    pendingReview.value = null
     await loadMerchants()
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '審核失敗'
+  } finally {
+    reviewing.value = false
   }
 }
 
@@ -130,13 +141,13 @@ onMounted(loadMerchants)
         >
           <button
             class="btn-approve"
-            @click="handleApprove(m.id)"
+            @click="askApprove(m)"
           >
             通過
           </button>
           <button
             class="btn-reject"
-            @click="handleReject(m.id)"
+            @click="askReject(m)"
           >
             拒絕
           </button>
@@ -150,6 +161,17 @@ onMounted(loadMerchants)
     >
       {{ error }}
     </p>
+
+    <ConfirmDialog
+      :open="pendingReview !== null"
+      :title="pendingReview?.action === 'approve' ? '通過商家申請' : '拒絕商家申請'"
+      :message="`確定要${pendingReview?.action === 'approve' ? '通過' : '拒絕'}「${pendingReview?.name ?? ''}」嗎？`"
+      :confirm-label="pendingReview?.action === 'approve' ? '通過' : '拒絕'"
+      :tone="pendingReview?.action === 'approve' ? 'primary' : 'danger'"
+      :loading="reviewing"
+      @confirm="handleReview"
+      @cancel="pendingReview = null"
+    />
   </div>
 </template>
 

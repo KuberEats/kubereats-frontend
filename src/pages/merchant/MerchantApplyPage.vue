@@ -13,18 +13,20 @@ const form = ref({
   tags: '',
 })
 const error = ref('')
+const successMessage = ref('')
 const loading = ref(false)
 
 async function handleSubmit() {
   error.value = ''
+  successMessage.value = ''
   loading.value = true
   try {
     await applyMerchant({
       ...form.value,
       tags: form.value.tags.split(',').map(t => t.trim()).filter(Boolean),
     })
-    alert('申請已送出，請等待福委會審核')
-    navigateTo('/merchant/dashboard')
+    successMessage.value = '申請已送出，請等待福委會審核。'
+    window.setTimeout(() => navigateTo('/merchant/dashboard'), 900)
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '申請失敗'
   } finally {
@@ -123,6 +125,13 @@ async function handleSubmit() {
       >
         {{ error }}
       </p>
+      <p
+        v-if="successMessage"
+        class="success-text"
+        role="status"
+      >
+        {{ successMessage }}
+      </p>
       <button
         type="submit"
         class="btn-primary"
@@ -149,4 +158,5 @@ async function handleSubmit() {
 .btn-primary:hover { background: #c0392b; }
 .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
+.success-text { color: #047857; font-size: 0.875rem; }
 </style>

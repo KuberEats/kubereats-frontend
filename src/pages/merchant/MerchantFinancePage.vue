@@ -20,6 +20,7 @@ const monthlyDistribution = ref<MonthlyItemDistribution[]>([])
 const loading = ref(true)
 const generating = ref(false)
 const error = ref('')
+const actionMessage = ref('')
 
 const chartData = computed(() => {
   if (monthlyDistribution.value.length === 0) return []
@@ -72,11 +73,13 @@ onMounted(async () => {
 async function handleGenerateReport() {
   if (!merchant.value) return
   generating.value = true
+  actionMessage.value = ''
   try {
     const result = await generateReport(merchant.value.id)
     window.open(result.url, '_blank')
+    actionMessage.value = '報表已產生，已在新分頁開啟。'
   } catch (e: unknown) {
-    alert('報表產生失敗：' + (e instanceof Error ? e.message : '未知錯誤'))
+    error.value = '報表產生失敗：' + (e instanceof Error ? e.message : '未知錯誤')
   } finally {
     generating.value = false
   }
@@ -101,6 +104,14 @@ async function handleGenerateReport() {
         {{ generating ? '產生中...' : '產生報表' }}
       </button>
     </div>
+
+    <p
+      v-if="actionMessage"
+      class="success-text"
+      role="status"
+    >
+      {{ actionMessage }}
+    </p>
 
     <div
       v-if="loading"
@@ -246,6 +257,7 @@ async function handleGenerateReport() {
 .btn-accent:hover { background: #ea580c; }
 .btn-accent:disabled { opacity: 0.55; cursor: not-allowed; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
+.success-text { color: #047857; font-size: 0.875rem; margin-bottom: 1rem; }
 
 .chart-card { margin-top: 1rem; }
 .chart-content { display: flex; align-items: center; gap: 2rem; padding: 1rem 0; }

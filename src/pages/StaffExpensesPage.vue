@@ -10,6 +10,7 @@ const tags = ref<string[]>([])
 const barcodeImage = ref('')
 const loading = ref(true)
 const error = ref('')
+const actionMessage = ref('')
 
 onMounted(async () => {
   try {
@@ -38,11 +39,13 @@ onMounted(async () => {
 })
 
 async function handleGenerateBarcode() {
+  actionMessage.value = ''
   try {
     const result = await generateBarcode(userId.value)
     barcodeImage.value = result.barcode_base64
+    actionMessage.value = '識別標籤已產生。'
   } catch (e: unknown) {
-    alert('標籤產生失敗：' + (e instanceof Error ? e.message : '未知錯誤'))
+    error.value = '標籤產生失敗：' + (e instanceof Error ? e.message : '未知錯誤')
   }
 }
 </script>
@@ -65,6 +68,14 @@ async function handleGenerateBarcode() {
         </button>
       </div>
     </div>
+
+    <p
+      v-if="actionMessage"
+      class="success-text"
+      role="status"
+    >
+      {{ actionMessage }}
+    </p>
 
     <div
       v-if="loading"
@@ -175,4 +186,5 @@ async function handleGenerateBarcode() {
 .btn-accent { background: #f97316; color: white; border-color: #f97316; }
 .btn-accent:hover { background: #ea580c; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
+.success-text { color: #047857; font-size: 0.875rem; margin-bottom: 1rem; }
 </style>

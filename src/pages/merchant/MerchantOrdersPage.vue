@@ -3,11 +3,14 @@ import { onMounted, ref } from 'vue'
 import { getTodayOrders, confirmTodayOrders } from '../../api/merchants'
 import { navigateTo } from '../../router'
 import type { TodayOrderSummary } from '../../api/types'
+import ConfirmDialog from '../../components/ConfirmDialog.vue'
 
 const summary = ref<TodayOrderSummary | null>(null)
 const error = ref('')
+const successMessage = ref('')
 const loading = ref(true)
 const confirming = ref(false)
+const showConfirmDialog = ref(false)
 
 onMounted(async () => {
   try {
@@ -20,18 +23,21 @@ onMounted(async () => {
 })
 
 async function handleConfirmToday() {
-  if (!confirm('確定要將今日所有待處理訂單標記為完成？\n完成後將從員工薪資扣款。')) return
+  showConfirmDialog.value = false
   confirming.value = true
+  error.value = ''
+  successMessage.value = ''
+
   try {
     const result = await confirmTodayOrders()
     if (result.confirmed_count === 0) {
-      alert('今日所有訂單已是完成狀態，無需重複確認。')
+      successMessage.value = '今日所有訂單已是完成狀態，無需重複確認。'
     } else {
-      alert(`已確認完成 ${result.confirmed_count} 筆訂單，將從員工薪資扣款。`)
+      successMessage.value = `已確認完成 ${result.confirmed_count} 筆訂單，將從員工薪資扣款。`
     }
     summary.value = await getTodayOrders()
   } catch (e: unknown) {
-    alert('確認失敗：' + (e instanceof Error ? e.message : '未知錯誤'))
+    error.value = '確認失敗：' + (e instanceof Error ? e.message : '未知錯誤')
   } finally {
     confirming.value = false
   }
@@ -45,7 +51,7 @@ async function handleConfirmToday() {
       <button
         class="btn-small btn-confirm"
         :disabled="confirming"
-        @click="handleConfirmToday"
+        @click="showConfirmDialog = true"
       >
         {{ confirming ? '確認中...' : '確認今日訂單完成' }}
       </button>
@@ -114,11 +120,29 @@ async function handleConfirmToday() {
     </template>
 
     <p
+      v-if="successMessage"
+      class="success-text"
+      role="status"
+    >
+      {{ successMessage }}
+    </p>
+
+    <p
       v-if="error"
       class="error-text"
     >
       {{ error }}
     </p>
+
+    <ConfirmDialog
+      :open="showConfirmDialog"
+      title="確認今日訂單完成"
+      message="確定要將今日所有待處理訂單標記為完成？完成後將從員工薪資扣款。"
+      confirm-label="確認完成"
+      :loading="confirming"
+      @confirm="handleConfirmToday"
+      @cancel="showConfirmDialog = false"
+    />
   </div>
 </template>
 
@@ -142,4 +166,5 @@ async function handleConfirmToday() {
 .btn-confirm:hover { background: #219a52; }
 .btn-confirm:disabled { opacity: 0.55; cursor: not-allowed; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
+.success-text { color: #047857; font-size: 0.875rem; margin-top: 1rem; }
 </style>

@@ -3,13 +3,16 @@ import { onMounted, ref } from 'vue'
 import { getMyMerchant, listMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from '../../api/merchants'
 import { navigateTo } from '../../router'
 import type { MerchantInfo, MenuItem } from '../../api/types'
+import ConfirmDialog from '../../components/ConfirmDialog.vue'
 
 const merchant = ref<MerchantInfo | null>(null)
 const menuItems = ref<MenuItem[]>([])
 const error = ref('')
 const loading = ref(true)
+const deleting = ref(false)
 const showAddForm = ref(false)
 const editingId = ref<number | null>(null)
+const pendingDeleteId = ref<number | null>(null)
 
 const newItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0 })
 const editItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0 })
@@ -38,6 +41,7 @@ onMounted(async () => {
 })
 
 async function handleAddItem() {
+  error.value = ''
   try {
     const item = await createMenuItem(newItem.value)
     menuItems.value.push(item)
@@ -58,6 +62,7 @@ function startEdit(item: MenuItem) {
 }
 
 async function handleUpdateItem(menuId: number) {
+  error.value = ''
   try {
     const updated = await updateMenuItem(menuId, editItem.value)
     const idx = menuItems.value.findIndex(m => m.id === menuId)
@@ -68,13 +73,23 @@ async function handleUpdateItem(menuId: number) {
   }
 }
 
-async function handleDeleteItem(menuId: number) {
-  if (!confirm('確定要刪除此菜品嗎？')) return
+function askDeleteItem(menuId: number) {
+  pendingDeleteId.value = menuId
+}
+
+async function handleDeleteItem() {
+  if (!pendingDeleteId.value) return
+  deleting.value = true
+  error.value = ''
+
   try {
-    await deleteMenuItem(menuId)
-    menuItems.value = menuItems.value.filter(m => m.id !== menuId)
+    await deleteMenuItem(pendingDeleteId.value)
+    menuItems.value = menuItems.value.filter(m => m.id !== pendingDeleteId.value)
+    pendingDeleteId.value = null
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '刪除失敗'
+  } finally {
+    deleting.value = false
   }
 }
 </script>
@@ -250,7 +265,7 @@ async function handleDeleteItem(menuId: number) {
               </button>
               <button
                 class="btn-small btn-danger"
-                @click="handleDeleteItem(item.id)"
+                @click="askDeleteItem(item.id)"
               >
                 刪除
               </button>
@@ -266,6 +281,17 @@ async function handleDeleteItem(menuId: number) {
     >
       {{ error }}
     </p>
+
+    <ConfirmDialog
+      :open="pendingDeleteId !== null"
+      title="刪除菜品"
+      message="確定要刪除此菜品嗎？刪除後員工將無法再選購此品項。"
+      confirm-label="刪除"
+      tone="danger"
+      :loading="deleting"
+      @confirm="handleDeleteItem"
+      @cancel="pendingDeleteId = null"
+    />
   </div>
 </template>
 
