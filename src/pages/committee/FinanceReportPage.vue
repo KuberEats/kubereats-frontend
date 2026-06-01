@@ -127,4 +127,9 @@ onMounted(async () => {
 .report-item:hover { border-color: #f97316; }
 .report-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; background: #fee2e2; color: #dc2626; font-size: 10px; font-weight: 800; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
+
+@media (max-width: 640px) {
+  .page-container { margin: 1rem auto; }
+  .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+}
 </style>

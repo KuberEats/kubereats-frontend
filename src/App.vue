@@ -157,18 +157,36 @@ watchEffect(() => {
 <style scoped>
 .app-shell { min-height: 100vh; background: #f5f5f5; }
 .app-topbar {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
   padding: 0.75rem 1.5rem; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 .brand-button {
   background: none; border: none; font-size: 1.25rem; font-weight: 700;
   color: #e74c3c; cursor: pointer;
 }
-.topbar-actions { display: flex; gap: 0.5rem; }
+.topbar-actions { display: flex; gap: 0.5rem; overflow-x: auto; }
 .topbar-actions button {
   padding: 0.4rem 0.75rem; border: 1px solid #ddd; border-radius: 4px;
-  background: white; color: #333; cursor: pointer; font-size: 0.85rem;
+  background: white; color: #333; cursor: pointer; font-size: 0.85rem; white-space: nowrap;
+  flex: 0 0 auto;
 }
 .topbar-actions button:hover { background: #f5f5f5; }
 .logout-btn { color: #e74c3c; }
+
+@media (max-width: 700px) {
+  .app-topbar {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 0.75rem 1rem;
+  }
+
+  .brand-button {
+    align-self: flex-start;
+  }
+
+  .topbar-actions {
+    margin: 0 -1rem;
+    padding: 0 1rem 0.25rem;
+  }
+}
 </style>

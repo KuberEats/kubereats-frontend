@@ -206,4 +206,12 @@ onMounted(loadMerchants)
 }
 .btn-reject:hover { background: #c0392b; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
+
+@media (max-width: 640px) {
+  .page-container { margin: 1rem auto; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; }
+  .merchant-header { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
+  .merchant-details { flex-direction: column; gap: 0.35rem; }
+  .action-buttons { display: grid; grid-template-columns: 1fr 1fr; }
+}
 </style>

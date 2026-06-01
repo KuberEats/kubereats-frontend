@@ -328,4 +328,16 @@ async function handleDeleteItem() {
 .finance-btn:hover { border-color: #f97316; }
 .finance-btn-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; color: #f97316; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
+
+@media (max-width: 640px) {
+  .page-container { margin: 1rem auto; }
+  .section-header { align-items: stretch; flex-direction: column; }
+  .finance-actions { flex-direction: column; }
+  .form-row { flex-direction: column; align-items: stretch; }
+  .form-row input,
+  .form-row button { width: 100%; }
+  .menu-item { align-items: stretch; flex-direction: column; gap: 0.75rem; }
+  .menu-item-info { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
+  .menu-item-actions { display: grid; grid-template-columns: 1fr 1fr; }
+}
 </style>

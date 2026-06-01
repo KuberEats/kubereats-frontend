@@ -187,4 +187,12 @@ async function handleGenerateBarcode() {
 .btn-accent:hover { background: #ea580c; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
 .success-text { color: #047857; font-size: 0.875rem; margin-bottom: 1rem; }
+
+@media (max-width: 640px) {
+  .page-container { margin: 1rem auto; }
+  .section-header { align-items: stretch; flex-direction: column; }
+  .header-actions { align-items: stretch; flex-wrap: wrap; }
+  .header-actions .btn-small { width: 100%; }
+  .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+}
 </style>

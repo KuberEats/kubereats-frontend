@@ -140,6 +140,7 @@ async function handleSubmit() {
   align-items: center;
   min-height: 100vh;
   background: #f5f5f5;
+  padding: 1rem;
 }
 .login-card {
   background: white;
@@ -202,5 +203,11 @@ async function handleSubmit() {
   cursor: pointer;
   font-size: inherit;
   text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.5rem;
+  }
 }
 </style>

@@ -270,8 +270,11 @@ async function handleGenerateReport() {
 .legend-amount { color: #9ca3af; font-size: 0.8rem; min-width: 60px; text-align: right; }
 
 @media (max-width: 600px) {
+  .page-container { margin: 1rem auto; }
+  .section-header { align-items: stretch; flex-direction: column; }
   .stats-row { grid-template-columns: 1fr; }
   .chart-content { flex-direction: column; gap: 1.5rem; }
   .pie-chart { width: 120px; height: 120px; }
+  .data-table { display: block; overflow-x: auto; white-space: nowrap; }
 }
 </style>
