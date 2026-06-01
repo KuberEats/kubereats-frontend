@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 // 你的頁面
 import LoginPage from './pages/LoginPage.vue'
 import MerchantApplyPage from './pages/merchant/MerchantApplyPage.vue'
@@ -19,6 +19,27 @@ import ReservationStatusPage from './pages/ReservationStatusPage.vue'
 
 import { currentRoute, navigateTo } from './router'
 import { clearTokens, getAccessToken } from './api/client'
+import { getMe } from './api/auth'
+import type { User } from './api/types'
+
+function readStoredUser() {
+  const user = localStorage.getItem('user')
+  if (!user) return null
+
+  try {
+    return JSON.parse(user) as Pick<User, 'id' | 'role'>
+  } catch {
+    return null
+  }
+}
+
+function storeCurrentUser(user: User) {
+  localStorage.setItem('user', JSON.stringify({ id: user.id, role: user.role }))
+}
+
+const authenticatedUser = ref<Pick<User, 'id' | 'role'> | null>(readStoredUser())
+const authCheckPending = ref(false)
+let authCheckId = 0
 
 const isLoggedIn = computed(() => {
   void currentRoute.value // track route changes
@@ -27,13 +48,7 @@ const isLoggedIn = computed(() => {
 
 const userRole = computed(() => {
   void currentRoute.value // track route changes so this re-evaluates on login/logout
-  const user = localStorage.getItem('user')
-  if (!user) return null
-  try {
-    return JSON.parse(user).role as string
-  } catch {
-    return null
-  }
+  return authenticatedUser.value?.role ?? readStoredUser()?.role ?? null
 })
 
 const homePath = computed(() => {
@@ -48,20 +63,64 @@ function handleHomeClick() {
 
 function handleLogout() {
   clearTokens()
+  authenticatedUser.value = null
   navigateTo('/login')
 }
 
-watchEffect(() => {
-  if (isLoggedIn.value && currentRoute.value.name === 'login') {
-    navigateTo(homePath.value)
+async function validateSession() {
+  const checkId = ++authCheckId
+  authCheckPending.value = true
+
+  try {
+    const user = await getMe()
+    if (checkId !== authCheckId) return false
+    authenticatedUser.value = { id: user.id, role: user.role }
+    storeCurrentUser(user)
+    return true
+  } catch {
+    if (checkId === authCheckId) {
+      clearTokens()
+      authenticatedUser.value = null
+    }
+    return false
+  } finally {
+    if (checkId === authCheckId) {
+      authCheckPending.value = false
+    }
   }
-})
+}
+
+watch(
+  () => currentRoute.value.name,
+  async routeName => {
+    if (!getAccessToken()) {
+      authenticatedUser.value = null
+      if (routeName !== 'login') {
+        navigateTo('/login')
+      }
+      return
+    }
+
+    const isValidSession = await validateSession()
+    if (!isValidSession) {
+      if (currentRoute.value.name !== 'login') {
+        navigateTo('/login')
+      }
+      return
+    }
+
+    if (currentRoute.value.name === 'login') {
+      navigateTo(homePath.value)
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div class="app-shell">
     <header
-      v-if="isLoggedIn"
+      v-if="isLoggedIn && !authCheckPending"
       class="app-topbar"
     >
       <button
@@ -125,31 +184,39 @@ watchEffect(() => {
     </header>
 
     <main>
-      <LoginPage v-if="currentRoute.name === 'login'" />
-      <!-- 你的頁面 -->
-      <MerchantApplyPage v-else-if="currentRoute.name === 'merchant-apply'" />
-      <MerchantDashboardPage v-else-if="currentRoute.name === 'merchant-dashboard'" />
-      <MerchantOrdersPage v-else-if="currentRoute.name === 'merchant-orders'" />
-      <CommitteeReviewPage v-else-if="currentRoute.name === 'committee-review'" />
-      <!-- finance / tagging 頁面 -->
-      <MerchantFinancePage v-else-if="currentRoute.name === 'merchant-finance'" />
-      <StaffExpensesPage v-else-if="currentRoute.name === 'staff-expenses'" />
-      <FinanceReportPage v-else-if="currentRoute.name === 'merchant-finance-reports'" />
-      <!-- 組員的頁面 -->
-      <MerchantListPage v-else-if="currentRoute.name === 'merchant-list'" />
-      <MerchantDetailPage
-        v-else-if="currentRoute.name === 'merchant-detail'"
-        :merchant-id="currentRoute.params.merchantId"
-      />
-      <OrderHistoryPage v-else-if="currentRoute.name === 'order-history'" />
-      <OrderDetailPage
-        v-else-if="currentRoute.name === 'order-detail'"
-        :order-id="currentRoute.params.orderId"
-      />
-      <ReservationStatusPage
-        v-else-if="currentRoute.name === 'reservation-status'"
-        :order-token="currentRoute.params.orderToken"
-      />
+      <div
+        v-if="authCheckPending"
+        class="auth-loading"
+      >
+        驗證登入狀態...
+      </div>
+      <LoginPage v-else-if="currentRoute.name === 'login'" />
+      <template v-else-if="isLoggedIn">
+        <!-- 你的頁面 -->
+        <MerchantApplyPage v-if="currentRoute.name === 'merchant-apply'" />
+        <MerchantDashboardPage v-else-if="currentRoute.name === 'merchant-dashboard'" />
+        <MerchantOrdersPage v-else-if="currentRoute.name === 'merchant-orders'" />
+        <CommitteeReviewPage v-else-if="currentRoute.name === 'committee-review'" />
+        <!-- finance / tagging 頁面 -->
+        <MerchantFinancePage v-else-if="currentRoute.name === 'merchant-finance'" />
+        <StaffExpensesPage v-else-if="currentRoute.name === 'staff-expenses'" />
+        <FinanceReportPage v-else-if="currentRoute.name === 'merchant-finance-reports'" />
+        <!-- 組員的頁面 -->
+        <MerchantListPage v-else-if="currentRoute.name === 'merchant-list'" />
+        <MerchantDetailPage
+          v-else-if="currentRoute.name === 'merchant-detail'"
+          :merchant-id="currentRoute.params.merchantId"
+        />
+        <OrderHistoryPage v-else-if="currentRoute.name === 'order-history'" />
+        <OrderDetailPage
+          v-else-if="currentRoute.name === 'order-detail'"
+          :order-id="currentRoute.params.orderId"
+        />
+        <ReservationStatusPage
+          v-else-if="currentRoute.name === 'reservation-status'"
+          :order-token="currentRoute.params.orderToken"
+        />
+      </template>
     </main>
   </div>
 </template>
@@ -172,6 +239,13 @@ watchEffect(() => {
 }
 .topbar-actions button:hover { background: #f5f5f5; }
 .logout-btn { color: #e74c3c; }
+.auth-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: #555;
+  font-weight: 600;
+}
 
 @media (max-width: 700px) {
   .app-topbar {

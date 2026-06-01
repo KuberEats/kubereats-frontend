@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../../App.vue'
+import { clearTokens, setTokens } from '../../api/client'
 import { navigateTo } from '../../router'
 import MerchantDetailPage from '../MerchantDetailPage.vue'
 import ReservationStatusPage from '../ReservationStatusPage.vue'
@@ -33,6 +34,9 @@ const mocks = vi.hoisted(() => ({
   listMerchantMenuItems: vi.fn(),
   createReservationRequest: vi.fn(),
   getReservationStatus: vi.fn(),
+  getMe: vi.fn(),
+  login: vi.fn(),
+  register: vi.fn(),
   navigateTo: vi.fn(),
 }))
 
@@ -57,6 +61,12 @@ vi.mock('../../api/orders', () => ({
   getReservationStatus: mocks.getReservationStatus,
   listOrders: vi.fn().mockResolvedValue([]),
   updateOrderStatus: vi.fn(),
+}))
+
+vi.mock('../../api/auth', () => ({
+  getMe: mocks.getMe,
+  login: mocks.login,
+  register: mocks.register,
 }))
 
 vi.mock('../../router', async importOriginal => {
@@ -96,6 +106,7 @@ async function mountMerchantDetail() {
 }
 
 beforeEach(() => {
+  clearTokens()
   localStorage.clear()
   localStorage.setItem('user', JSON.stringify({ id: 1, role: 'employee' }))
   vi.stubGlobal('crypto', { randomUUID: () => 'idem-key-1' })
@@ -103,6 +114,18 @@ beforeEach(() => {
   mocks.listMerchantMenuItems.mockReset()
   mocks.createReservationRequest.mockReset()
   mocks.getReservationStatus.mockReset()
+  mocks.getMe.mockReset()
+  mocks.login.mockReset()
+  mocks.register.mockReset()
+  mocks.getMe.mockResolvedValue({
+    id: 1,
+    username: 'employee@example.com',
+    email: null,
+    role: 'employee',
+    isActive: true,
+    createdAt: '2026-06-01T00:00:00Z',
+    updatedAt: '2026-06-01T00:00:00Z',
+  })
   mocks.navigateTo.mockClear()
 })
 
@@ -245,6 +268,7 @@ describe('reservation status page', () => {
   })
 
   it('loads from the refresh-safe route token', async () => {
+    setTokens('access-token', 'refresh-token')
     mocks.getReservationStatus.mockResolvedValue(reservedStatus({ order_token: 'refresh-token' }))
     navigateTo('/reservation-status/refresh-token')
 
@@ -253,6 +277,18 @@ describe('reservation status page', () => {
 
     expect(mocks.getReservationStatus).toHaveBeenCalledWith('refresh-token')
     expect(wrapper.text()).toContain('預訂成功')
+  })
+
+  it('redirects protected routes to login when unauthenticated', async () => {
+    clearTokens()
+    navigateTo('/merchants')
+
+    const wrapper = mount(App)
+    await flushPromises()
+
+    expect(mocks.getMe).not.toHaveBeenCalled()
+    expect(mocks.navigateTo).toHaveBeenCalledWith('/login')
+    expect(wrapper.text()).toContain('登入')
   })
 
   it('shows a non-blocking warning after repeated polling failures', async () => {
