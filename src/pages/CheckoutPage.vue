@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { ApiError } from '../api/client'
 import { createReservationRequest } from '../api/orders'
 import type { ReservationRequestPayload, ReservationRequestResponse } from '../api/types'
@@ -22,6 +22,9 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 const successReservation = ref<ReservationRequestResponse | null>(null)
 const toastMessage = ref('')
+const dinerName = shallowRef('')
+const dinerPhone = shallowRef('')
+const comments = shallowRef('')
 const { t } = useI18n()
 
 const canSubmit = computed(() =>
@@ -44,6 +47,11 @@ function setQuantity(menuId: number, quantity: number) {
   cart.setQuantity(menuId, quantity)
 }
 
+function optionalText(value: string) {
+  const normalized = value.trim()
+  return normalized || undefined
+}
+
 function buildPayload(): ReservationRequestPayload | null {
   if (!cart.merchantId.value) return null
   return {
@@ -52,6 +60,9 @@ function buildPayload(): ReservationRequestPayload | null {
     service_date: cart.serviceDate.value,
     pickup_slot: cart.pickupSlot.value,
     pickup_option: 'SELF_PICKUP',
+    comments: optionalText(comments.value),
+    diner_name: optionalText(dinerName.value),
+    diner_phone: optionalText(dinerPhone.value),
     items: cart.items.value.map(item => ({
       menu_id: item.menuItem.id,
       quantity: item.quantity,
@@ -127,6 +138,10 @@ async function submitOrder() {
     successReservation.value = reservation
     toastMessage.value = t('checkout.toastSuccess')
     cart.clearCart()
+    dinerName.value = ''
+    dinerPhone.value = ''
+    comments.value = ''
+    navigateTo(`/reservation-status/${encodeURIComponent(reservation.order_token)}`)
   } catch (error) {
     submitError.value = formatOrderError(error)
   } finally {
@@ -257,6 +272,32 @@ async function submitOrder() {
               type="text"
               :disabled="isSubmitting"
             >
+          </FormField>
+          <FormField :label="t('checkout.dinerName')">
+            <input
+              v-model="dinerName"
+              type="text"
+              autocomplete="name"
+              :placeholder="t('checkout.dinerNamePlaceholder')"
+              :disabled="isSubmitting"
+            >
+          </FormField>
+          <FormField :label="t('checkout.dinerPhone')">
+            <input
+              v-model="dinerPhone"
+              type="tel"
+              autocomplete="tel"
+              :placeholder="t('checkout.dinerPhonePlaceholder')"
+              :disabled="isSubmitting"
+            >
+          </FormField>
+          <FormField :label="t('checkout.comments')">
+            <textarea
+              v-model="comments"
+              rows="3"
+              :placeholder="t('checkout.commentsPlaceholder')"
+              :disabled="isSubmitting"
+            />
           </FormField>
           <p class="checkout-note">
             {{ t('checkout.note') }}

@@ -143,7 +143,9 @@ function normalizeReservationStatus(data: Record<string, unknown>): ReservationS
     failed_items: normalizeReservationItems(data.failed_items ?? data.failedItems),
     items: normalizeReservationItems(data.items),
     order_time: optionalStringField(data, 'order_time', 'orderTime', 'created_at', 'createdAt'),
-    comments: optionalStringField(data, 'comments'),
+    comments: optionalStringField(data, 'comments', 'note', 'notes'),
+    diner_name: optionalStringField(data, 'diner_name', 'dinerName', 'guest_name', 'guestName'),
+    diner_phone: optionalStringField(data, 'diner_phone', 'dinerPhone', 'guest_phone', 'guestPhone'),
   }
 }
 

@@ -42,6 +42,9 @@ const reservationPayload: ReservationRequestPayload = {
   service_date: '2026-06-07',
   pickup_slot: '12:00-12:30',
   pickup_option: 'SELF_PICKUP',
+  comments: '少冰，餐點分開裝',
+  diner_name: '王小明',
+  diner_phone: '0912345678',
   items: [{ menu_id: 11, quantity: 2 }],
 }
 
@@ -99,6 +102,7 @@ describe('order scheduler API routes', () => {
         headers: { 'Idempotency-Key': 'idem-key' },
       }),
     )
+    expect(JSON.parse(mocks.apiRequest.mock.calls[0][1].body)).toEqual(reservationPayload)
     expect(mocks.apiRequest).toHaveBeenNthCalledWith(
       2,
       '/order-scheduler/reservation-requests/token%2Fwith%20slash',
@@ -137,6 +141,9 @@ describe('order scheduler API routes', () => {
       pickupSlot: '12:00-12:30',
       pickupOption: 'SELF_PICKUP',
       pickupNumber: null,
+      comments: '少冰，餐點分開裝',
+      dinerName: '王小明',
+      dinerPhone: '0912345678',
       createdAt: '2026-06-01T00:00:00Z',
       items: [{ id: 1, menuItemId: 11, itemName: '雞腿便當', unitPrice: 120 }],
     })
@@ -147,6 +154,9 @@ describe('order scheduler API routes', () => {
     expect(result.service_date).toBe('2026-06-07')
     expect(result.pickup_slot).toBe('12:00-12:30')
     expect(result.pickup_option).toBe('SELF_PICKUP')
+    expect(result.comments).toBe('少冰，餐點分開裝')
+    expect(result.diner_name).toBe('王小明')
+    expect(result.diner_phone).toBe('0912345678')
     expect(result.order_time).toBe('2026-06-01T00:00:00Z')
     expect(result.items?.[0]).toEqual(
       expect.objectContaining({
