@@ -24,13 +24,42 @@ interface AppRoute {
   }
 }
 
-const currentPath = ref(window.location.pathname)
-
 function normalizePath(path: string) {
   if (path.length > 1 && path.endsWith('/')) {
     return path.slice(0, -1)
   }
   return path
+}
+
+function getHashPath() {
+  if (window.location.hash === '#') {
+    return '/'
+  }
+  if (!window.location.hash.startsWith('#/')) {
+    return null
+  }
+  return window.location.hash.slice(1) || '/'
+}
+
+function getCurrentPath() {
+  return normalizePath(getHashPath() ?? window.location.pathname)
+}
+
+function toHashUrl(path: string) {
+  const normalizedPath = normalizePath(path)
+  // GCS static website hosting cannot rewrite SPA routes to index.html with a 200.
+  return normalizedPath === '/' ? '/#/' : `/#${normalizedPath}`
+}
+
+const currentPath = ref(getCurrentPath())
+
+function replaceLegacyPathWithHashRoute() {
+  if (window.location.pathname === '/' || getHashPath()) {
+    return
+  }
+
+  window.history.replaceState({}, '', toHashUrl(window.location.pathname))
+  currentPath.value = getCurrentPath()
 }
 
 function parseRoute(path: string): AppRoute {
@@ -103,10 +132,16 @@ export const currentRoute = computed(() => parseRoute(currentPath.value))
 
 export function navigateTo(path: string) {
   const normalizedPath = normalizePath(path)
-  window.history.pushState({}, '', normalizedPath)
+  window.history.pushState({}, '', toHashUrl(normalizedPath))
   currentPath.value = normalizedPath
 }
 
+replaceLegacyPathWithHashRoute()
+
 window.addEventListener('popstate', () => {
-  currentPath.value = window.location.pathname
+  currentPath.value = getCurrentPath()
+})
+
+window.addEventListener('hashchange', () => {
+  currentPath.value = getCurrentPath()
 })

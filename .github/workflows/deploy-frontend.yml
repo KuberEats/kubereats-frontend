@@ -147,6 +147,30 @@ jobs:
             --cache-control="no-cache,max-age=0,must-revalidate" \
             --content-type="text/html"
 
+      - name: Upload known SPA route aliases
+        shell: bash
+        run: |
+          routes=(
+            "login"
+            "merchant/apply"
+            "merchant/dashboard"
+            "merchant/orders"
+            "merchant/finance"
+            "merchant/finance-reports"
+            "committee/review"
+            "staff/expenses"
+            "merchants"
+            "orders"
+          )
+
+          for route in "${routes[@]}"; do
+            gcloud storage cp \
+              "${BUILD_DIR}/index.html" \
+              "gs://${{ vars.GCP_BUCKET }}/${route}" \
+              --cache-control="no-cache,max-age=0,must-revalidate" \
+              --content-type="text/html"
+          done
+
       - name: Verify deployment
         run: |
           gcloud storage objects describe \
