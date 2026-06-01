@@ -63,6 +63,9 @@ jobs:
       - linux
     needs: test
     if: github.event_name != 'pull_request'
+    env:
+      SONAR_HOST_URL: http://192.168.17.11:31090
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -71,11 +74,14 @@ jobs:
         with:
           name: frontend-coverage
           path: coverage
+      - name: Validate SonarQube token
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error title=Missing SONAR_TOKEN::Add a repository Actions secret named SONAR_TOKEN before running the SonarQube job."
+            exit 1
+          fi
       - name: SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v5
-        env:
-          SONAR_HOST_URL: http://192.168.17.11:31090
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        uses: sonarsource/sonarqube-scan-action@v6
 
   build:
     name: Build
