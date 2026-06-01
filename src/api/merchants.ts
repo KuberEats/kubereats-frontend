@@ -3,6 +3,13 @@ import type { Campus, MenuItem, Merchant, MerchantInfo, SortKey, TodayOrderSumma
 
 // ── 組員的：員工端瀏覽商家 ──
 
+interface MerchantRecommendationRequest {
+  userId: number
+  campus: Campus
+  prompt: string
+  limit: number
+}
+
 export function listMerchants(campus: Campus, date: string, sortBy: SortKey) {
   const params = new URLSearchParams({
     campus,
@@ -14,6 +21,13 @@ export function listMerchants(campus: Campus, date: string, sortBy: SortKey) {
   }
 
   return apiRequest<Merchant[]>(`/merchants?${params.toString()}`)
+}
+
+export function recommendMerchants(request: MerchantRecommendationRequest) {
+  return apiRequest<Merchant[]>('/recommendations/merchants', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
 }
 
 export function getMerchantDetail(merchantId: number) {

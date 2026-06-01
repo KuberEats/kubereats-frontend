@@ -32,9 +32,12 @@ export interface Merchant {
   category: string
   rating: number
   orderCount: number
-  minOrder: number
+  minOrder?: number
   deliveryTime: string
   tags: string[]
+  score?: number
+  reason?: string
+  signals?: Record<string, unknown>
   auditStatus?: number
   createdAt?: string
   updatedAt?: string

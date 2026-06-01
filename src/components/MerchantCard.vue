@@ -33,8 +33,9 @@ defineEmits<{
 
       <div class="merchant-meta">
         <span>{{ merchant.orderCount }} 人訂過</span>
-        <span>低消 ${{ merchant.minOrder }}</span>
+        <span v-if="merchant.minOrder !== undefined">低消 ${{ merchant.minOrder }}</span>
         <span>{{ merchant.deliveryTime }}</span>
+        <span v-if="merchant.score !== undefined">推薦分數 {{ merchant.score }}</span>
       </div>
 
       <div class="tag-list">
@@ -45,6 +46,13 @@ defineEmits<{
           {{ tag }}
         </span>
       </div>
+
+      <p
+        v-if="merchant.reason"
+        class="recommendation-reason"
+      >
+        {{ merchant.reason }}
+      </p>
     </div>
   </article>
 </template>

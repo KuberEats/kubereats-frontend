@@ -27,6 +27,7 @@ body {
 
 button,
 input,
+textarea,
 select {
   font: inherit;
   color: inherit;
@@ -254,6 +255,76 @@ h1, h2, h3, h4, p {
   color: #374151;
   padding: 6px 10px;
   font-size: 13px;
+}
+
+.recommendation-reason {
+  margin-top: 14px;
+  border-left: 4px solid #f97316;
+  border-radius: 8px;
+  background: #fff7ed;
+  padding: 10px 12px;
+  color: #7c2d12;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.recommendation-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+  border: 1px solid #e3ded6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.recommendation-summary h2 {
+  overflow-wrap: anywhere;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(17, 24, 39, 0.42);
+}
+
+.recommendation-dialog {
+  width: min(620px, 100%);
+  border: 1px solid #e3ded6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 22px;
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.24);
+}
+
+.recommendation-input {
+  width: 100%;
+  min-height: 118px;
+  margin-top: 18px;
+  resize: vertical;
+  border: 1px solid #d8d2c8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  padding: 12px 14px;
+  line-height: 1.5;
+}
+
+.recommendation-input:focus {
+  border-color: #f97316;
+  outline: 3px solid #fed7aa;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .status-message,
@@ -639,6 +710,7 @@ h1, h2, h3, h4, p {
 
 @media (max-width: 800px) {
   .page-header,
+  .recommendation-summary,
   .history-header,
   .history-order-main {
     align-items: stretch;
@@ -693,7 +765,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
   color: inherit;
 }
@@ -906,6 +979,76 @@ h1, h2, h3, h4, p {
   color: #374151;
   padding: 6px 10px;
   font-size: 13px;
+}
+
+.recommendation-reason {
+  margin-top: 14px;
+  border-left: 4px solid #f97316;
+  border-radius: 8px;
+  background: #fff7ed;
+  padding: 10px 12px;
+  color: #7c2d12;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.recommendation-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+  border: 1px solid #e3ded6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.recommendation-summary h2 {
+  overflow-wrap: anywhere;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(17, 24, 39, 0.42);
+}
+
+.recommendation-dialog {
+  width: min(620px, 100%);
+  border: 1px solid #e3ded6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 22px;
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.24);
+}
+
+.recommendation-input {
+  width: 100%;
+  min-height: 118px;
+  margin-top: 18px;
+  resize: vertical;
+  border: 1px solid #d8d2c8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  padding: 12px 14px;
+  line-height: 1.5;
+}
+
+.recommendation-input:focus {
+  border-color: #f97316;
+  outline: 3px solid #fed7aa;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .status-message,
@@ -1123,6 +1266,7 @@ h1, h2, h3, h4, p {
 
 @media (max-width: 800px) {
   .page-header,
+  .recommendation-summary,
   .history-header,
   .history-order-main {
     align-items: stretch;
