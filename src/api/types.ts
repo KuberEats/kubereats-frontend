@@ -42,6 +42,10 @@ export interface Merchant {
   reason?: string
   signals?: Record<string, unknown>
   auditStatus?: number
+  cooperationStartDate?: string | null
+  cooperationEndDate?: string | null
+  suspendedAt?: string | null
+  suspensionReason?: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -61,6 +65,10 @@ export interface MerchantInfo {
   deliveryTime: string
   tags: string[]
   auditStatus: number
+  cooperationStartDate?: string | null
+  cooperationEndDate?: string | null
+  suspendedAt?: string | null
+  suspensionReason?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -73,11 +81,19 @@ export interface MenuItem {
   itemName: string
   price: number
   maxDailyQuantity: number
-  imageId: string | null
+  imageId?: string | null
   dietaryType?: DietaryType | string | null
   allergens?: string[]
   certifications?: string[]
   imageUrl: string | null
+  caloriesKcal?: number | null
+  proteinG?: number | null
+  carbsG?: number | null
+  fatG?: number | null
+  sodiumMg?: number | null
+  sugarG?: number | null
+  servingSize?: string | null
+  ingredients?: string | null
   category?: string | null
   description?: string | null
   isAvailable?: boolean

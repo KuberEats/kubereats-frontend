@@ -1,20 +1,28 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { listPendingMerchants, listAllMerchants, approveMerchant, rejectMerchant } from '../../api/committee'
+import {
+  listPendingMerchants,
+  listAllMerchants,
+  approveMerchant,
+  rejectMerchant,
+  suspendMerchant,
+} from '../../api/committee'
 import type { MerchantInfo } from '../../api/types'
-import ConfirmDialog from '../../components/ConfirmDialog.vue'
+import CommitteeMerchantCard from '../../components/committee/CommitteeMerchantCard.vue'
+import CommitteeReviewActionPanel from '../../components/committee/CommitteeReviewActionPanel.vue'
 
 const tab = ref<'pending' | 'all'>('pending')
 const merchants = ref<MerchantInfo[]>([])
 const error = ref('')
 const loading = ref(true)
 const reviewing = ref(false)
-const pendingReview = ref<{ id: number; action: 'approve' | 'reject'; name: string } | null>(null)
+const pendingReview = ref<{ merchant: MerchantInfo; action: 'approve' | 'reject' | 'suspend' } | null>(null)
 
 const auditStatusText: Record<number, string> = {
   0: '待審核',
   1: '已通過',
   2: '已拒絕',
+  3: '已停權',
 }
 
 async function loadMerchants() {
@@ -32,23 +40,43 @@ async function loadMerchants() {
 }
 
 function askApprove(merchant: MerchantInfo) {
-  pendingReview.value = { id: merchant.id, action: 'approve', name: merchant.merchantName }
+  pendingReview.value = { merchant, action: 'approve' }
 }
 
 function askReject(merchant: MerchantInfo) {
-  pendingReview.value = { id: merchant.id, action: 'reject', name: merchant.merchantName }
+  pendingReview.value = { merchant, action: 'reject' }
 }
 
-async function handleReview() {
+function askSuspend(merchant: MerchantInfo) {
+  pendingReview.value = { merchant, action: 'suspend' }
+}
+
+async function handleReview(payload?: {
+  cooperationStartDate?: string
+  cooperationEndDate?: string
+  reason?: string
+}) {
   if (!pendingReview.value) return
   reviewing.value = true
   error.value = ''
 
   try {
+    const merchantId = pendingReview.value.merchant.id
     if (pendingReview.value.action === 'approve') {
-      await approveMerchant(pendingReview.value.id)
-    } else {
-      await rejectMerchant(pendingReview.value.id)
+      if (!payload?.cooperationStartDate || !payload.cooperationEndDate) {
+        throw new Error('請填寫合作期限')
+      }
+      await approveMerchant(merchantId, {
+        cooperationStartDate: payload.cooperationStartDate,
+        cooperationEndDate: payload.cooperationEndDate,
+      })
+    } else if (pendingReview.value.action === 'suspend') {
+      if (!payload?.reason) {
+        throw new Error('請填寫停權原因')
+      }
+      await suspendMerchant(merchantId, payload.reason)
+    } else if (pendingReview.value.action === 'reject') {
+      await rejectMerchant(merchantId)
     }
     pendingReview.value = null
     await loadMerchants()
@@ -106,58 +134,15 @@ onMounted(loadMerchants)
       v-else
       class="merchant-list"
     >
-      <div
+      <CommitteeMerchantCard
         v-for="m in merchants"
         :key="m.id"
-        class="card merchant-card"
-        :data-merchant-name="m.merchantName"
-      >
-        <div class="merchant-header">
-          <h3>{{ m.merchantName }}</h3>
-          <span
-            class="status"
-            :class="'status-' + m.auditStatus"
-          >
-            {{ auditStatusText[m.auditStatus] ?? '未知' }}
-          </span>
-        </div>
-        <div class="merchant-details">
-          <span>廠區：{{ m.campus }}</span>
-          <span>分類：{{ m.category }}</span>
-          <span>配送時間：{{ m.deliveryTime }}</span>
-          <span>最低訂購：${{ m.minOrder }}</span>
-          <span>最多訂購數量：{{ m.maxOrderQuantity === 0 ? '不限' : m.maxOrderQuantity }}</span>
-        </div>
-        <div
-          v-if="m.tags.length"
-          class="tags"
-        >
-          <span
-            v-for="tag in m.tags"
-            :key="tag"
-            class="tag"
-          >{{ tag }}</span>
-        </div>
-        <div
-          v-if="m.auditStatus === 0"
-          class="action-buttons"
-        >
-          <button
-            class="btn-approve"
-            data-testid="committee-approve-button"
-            @click="askApprove(m)"
-          >
-            通過
-          </button>
-          <button
-            class="btn-reject"
-            data-testid="committee-reject-button"
-            @click="askReject(m)"
-          >
-            拒絕
-          </button>
-        </div>
-      </div>
+        :merchant="m"
+        :status-text="auditStatusText[m.auditStatus] ?? '未知'"
+        @approve="askApprove"
+        @reject="askReject"
+        @suspend="askSuspend"
+      />
     </div>
 
     <p
@@ -167,14 +152,13 @@ onMounted(loadMerchants)
       {{ error }}
     </p>
 
-    <ConfirmDialog
-      :open="pendingReview !== null"
-      :title="pendingReview?.action === 'approve' ? '通過商家申請' : '拒絕商家申請'"
-      :message="`確定要${pendingReview?.action === 'approve' ? '通過' : '拒絕'}「${pendingReview?.name ?? ''}」嗎？`"
-      :confirm-label="pendingReview?.action === 'approve' ? '通過' : '拒絕'"
-      :tone="pendingReview?.action === 'approve' ? 'primary' : 'danger'"
+    <CommitteeReviewActionPanel
+      :merchant="pendingReview?.merchant ?? null"
+      :action="pendingReview?.action ?? null"
       :loading="reviewing"
-      @confirm="handleReview"
+      @approve="handleReview"
+      @reject="handleReview"
+      @suspend="reason => handleReview({ reason })"
       @cancel="pendingReview = null"
     />
   </div>
@@ -190,33 +174,10 @@ onMounted(loadMerchants)
 .tab.active { background: #e74c3c; color: white; border-color: #e74c3c; }
 .loading { text-align: center; padding: 2rem; color: #999; }
 .notice { text-align: center; padding: 2rem; color: #999; background: #fafafa; border-radius: 8px; }
-.card { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1rem; }
-.merchant-header { display: flex; justify-content: space-between; align-items: center; }
-.merchant-header h3 { margin: 0; }
-.merchant-details { display: flex; flex-wrap: wrap; gap: 1rem; color: #666; font-size: 0.9rem; margin-top: 0.5rem; }
-.tags { margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.tag { background: #f0f0f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
-.status-0 { color: #f39c12; font-weight: 600; }
-.status-1 { color: #27ae60; font-weight: 600; }
-.status-2 { color: #e74c3c; font-weight: 600; }
-.action-buttons { display: flex; gap: 0.5rem; margin-top: 1rem; }
-.btn-approve {
-  padding: 0.5rem 1.5rem; background: #27ae60; color: white;
-  border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;
-}
-.btn-approve:hover { background: #219a52; }
-.btn-reject {
-  padding: 0.5rem 1.5rem; background: #e74c3c; color: white;
-  border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;
-}
-.btn-reject:hover { background: #c0392b; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
 
 @media (max-width: 640px) {
   .page-container { margin: 1rem auto; }
   .tabs { display: grid; grid-template-columns: 1fr 1fr; }
-  .merchant-header { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
-  .merchant-details { flex-direction: column; gap: 0.35rem; }
-  .action-buttons { display: grid; grid-template-columns: 1fr 1fr; }
 }
 </style>

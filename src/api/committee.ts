@@ -9,14 +9,28 @@ export function listAllMerchants(): Promise<MerchantInfo[]> {
   return apiRequest<MerchantInfo[]>('/committee/merchants')
 }
 
-export function approveMerchant(merchantId: number): Promise<AuditResult> {
+export function approveMerchant(
+  merchantId: number,
+  data: {
+    cooperationStartDate: string
+    cooperationEndDate: string
+  },
+): Promise<AuditResult> {
   return apiRequest<AuditResult>(`/committee/merchants/${merchantId}/approve`, {
     method: 'PATCH',
+    body: JSON.stringify(data),
   })
 }
 
 export function rejectMerchant(merchantId: number): Promise<AuditResult> {
   return apiRequest<AuditResult>(`/committee/merchants/${merchantId}/reject`, {
     method: 'PATCH',
+  })
+}
+
+export function suspendMerchant(merchantId: number, reason: string): Promise<AuditResult> {
+  return apiRequest<AuditResult>(`/committee/merchants/${merchantId}/suspend`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reason }),
   })
 }

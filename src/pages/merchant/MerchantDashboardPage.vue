@@ -21,6 +21,15 @@ interface MenuFormState {
   dietaryType: DietaryType
   allergens: string[]
   certifications: string[]
+  imageUrl: string
+  caloriesKcal: number | null | ''
+  proteinG: number | null | ''
+  carbsG: number | null | ''
+  fatG: number | null | ''
+  sodiumMg: number | null | ''
+  sugarG: number | null | ''
+  servingSize: string
+  ingredients: string
 }
 
 const dietaryOptions = [
@@ -37,8 +46,6 @@ const certificationOptions = ['SGS', 'HACCP', 'ISO 22000', '清真', '產銷履�
 
 const newItem = ref<MenuFormState>(createEmptyMenuForm())
 const editItem = ref<MenuFormState>(createEmptyMenuForm())
-const newItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0, imageUrl: '' })
-const editItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0, imageUrl: '' })
 const uploadingNew = ref(false)
 const uploadingEdit = ref(false)
 
@@ -56,6 +63,15 @@ function createEmptyMenuForm(): MenuFormState {
     dietaryType: 'MEAT',
     allergens: [],
     certifications: [],
+    imageUrl: '',
+    caloriesKcal: null,
+    proteinG: null,
+    carbsG: null,
+    fatG: null,
+    sodiumMg: null,
+    sugarG: null,
+    servingSize: '',
+    ingredients: '',
   }
 }
 
@@ -79,6 +95,24 @@ function updateMultiSelect(
   target[field] = toggleValue(target[field], value, (event.target as HTMLInputElement).checked)
 }
 
+function optionalNumber(value: number | null | '') {
+  return value === '' ? null : value
+}
+
+function normalizeMenuForm(item: MenuFormState) {
+  return {
+    ...item,
+    caloriesKcal: optionalNumber(item.caloriesKcal),
+    proteinG: optionalNumber(item.proteinG),
+    carbsG: optionalNumber(item.carbsG),
+    fatG: optionalNumber(item.fatG),
+    sodiumMg: optionalNumber(item.sodiumMg),
+    sugarG: optionalNumber(item.sugarG),
+    servingSize: item.servingSize.trim() || null,
+    ingredients: item.ingredients.trim() || null,
+  }
+}
+
 onMounted(async () => {
   try {
     merchant.value = await getMyMerchant()
@@ -99,11 +133,10 @@ onMounted(async () => {
 async function handleAddItem() {
   error.value = ''
   try {
-    const item = await createMenuItem(newItem.value)
+    const item = await createMenuItem(normalizeMenuForm(newItem.value))
     menuItems.value.push(item)
     showAddForm.value = false
     newItem.value = createEmptyMenuForm()
-    newItem.value = { itemName: '', price: 0, maxDailyQuantity: 0, imageUrl: '' }
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '新增失敗'
   }
@@ -119,6 +152,14 @@ function startEdit(item: MenuItem) {
     allergens: [...(item.allergens ?? [])],
     certifications: [...(item.certifications ?? [])],
     imageUrl: item.imageUrl ?? '',
+    caloriesKcal: item.caloriesKcal ?? null,
+    proteinG: item.proteinG ?? null,
+    carbsG: item.carbsG ?? null,
+    fatG: item.fatG ?? null,
+    sodiumMg: item.sodiumMg ?? null,
+    sugarG: item.sugarG ?? null,
+    servingSize: item.servingSize ?? '',
+    ingredients: item.ingredients ?? '',
   }
 }
 
@@ -147,7 +188,7 @@ async function handleImageSelect(event: Event, target: 'new' | 'edit') {
 async function handleUpdateItem(menuId: number) {
   error.value = ''
   try {
-    const updated = await updateMenuItem(menuId, editItem.value)
+    const updated = await updateMenuItem(menuId, normalizeMenuForm(editItem.value))
     const idx = menuItems.value.findIndex(m => m.id === menuId)
     if (idx !== -1) menuItems.value[idx] = updated
     editingId.value = null
@@ -337,6 +378,7 @@ async function handleDeleteItem() {
                 {{ certification }}
               </label>
             </fieldset>
+          </div>
           <div class="image-row">
             <label class="upload-btn">
               {{ uploadingNew ? '上傳中…' : (newItem.imageUrl ? '更換圖片' : '上傳圖片') }}
@@ -355,6 +397,58 @@ async function handleDeleteItem() {
               class="image-preview"
               alt="菜品圖片預覽"
             >
+          </div>
+          <div class="nutrition-fields">
+            <input
+              v-model.number="newItem.caloriesKcal"
+              type="number"
+              min="0"
+              placeholder="熱量 kcal"
+            >
+            <input
+              v-model.number="newItem.proteinG"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="蛋白質 g"
+            >
+            <input
+              v-model.number="newItem.carbsG"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="碳水 g"
+            >
+            <input
+              v-model.number="newItem.fatG"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="脂肪 g"
+            >
+            <input
+              v-model.number="newItem.sodiumMg"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="鈉 mg"
+            >
+            <input
+              v-model.number="newItem.sugarG"
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="糖 g"
+            >
+            <input
+              v-model="newItem.servingSize"
+              placeholder="份量，例如：1 份 / 350g"
+            >
+            <textarea
+              v-model="newItem.ingredients"
+              rows="2"
+              placeholder="食材說明，例如：白飯、雞腿、青菜"
+            />
           </div>
         </div>
 
@@ -439,6 +533,7 @@ async function handleDeleteItem() {
                   {{ certification }}
                 </label>
               </fieldset>
+            </div>
             <div class="image-row">
               <label class="upload-btn">
                 {{ uploadingEdit ? '上傳中…' : (editItem.imageUrl ? '更換圖片' : '上傳圖片') }}
@@ -457,6 +552,58 @@ async function handleDeleteItem() {
                 alt="菜品圖片預覽"
               >
             </div>
+            <div class="nutrition-fields">
+              <input
+                v-model.number="editItem.caloriesKcal"
+                type="number"
+                min="0"
+                placeholder="熱量 kcal"
+              >
+              <input
+                v-model.number="editItem.proteinG"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="蛋白質 g"
+              >
+              <input
+                v-model.number="editItem.carbsG"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="碳水 g"
+              >
+              <input
+                v-model.number="editItem.fatG"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="脂肪 g"
+              >
+              <input
+                v-model.number="editItem.sodiumMg"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="鈉 mg"
+              >
+              <input
+                v-model.number="editItem.sugarG"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="糖 g"
+              >
+              <input
+                v-model="editItem.servingSize"
+                placeholder="份量，例如：1 份 / 350g"
+              >
+              <textarea
+                v-model="editItem.ingredients"
+                rows="2"
+                placeholder="食材說明，例如：白飯、雞腿、青菜"
+              />
+            </div>
           </template>
           <template v-else>
             <div class="menu-item-info">
@@ -470,6 +617,8 @@ async function handleDeleteItem() {
               <span>${{ item.price }}</span>
               <span>每日限量 {{ item.maxDailyQuantity }} 份</span>
               <span>{{ dietaryText(item.dietaryType) }}</span>
+              <span v-if="item.caloriesKcal != null">{{ item.caloriesKcal }} kcal</span>
+              <span v-if="item.proteinG != null">蛋白質 {{ item.proteinG }}g</span>
               <div class="menu-badges">
                 <span
                   v-for="badge in [...(item.allergens ?? []).map(allergen => `含${allergen}`), ...(item.certifications ?? [])]"
@@ -548,6 +697,10 @@ async function handleDeleteItem() {
 .menu-meta-fields fieldset { border: 1px solid #ddd; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.75rem; }
 .menu-meta-fields legend { color: #555; font-size: 0.85rem; font-weight: 700; padding: 0 0.25rem; }
 .menu-meta-fields label { display: inline-flex; align-items: center; gap: 0.25rem; color: #555; font-size: 0.85rem; }
+.nutrition-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.75rem; }
+.nutrition-fields input,
+.nutrition-fields textarea { min-width: 0; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
+.nutrition-fields textarea { grid-column: span 2; resize: vertical; }
 .menu-badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .menu-badges span { background: #f0f0f0; border-radius: 4px; color: #666; font-size: 0.78rem; padding: 0.18rem 0.45rem; }
 .btn-primary { background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 0.4rem 0.75rem; }
@@ -573,6 +726,8 @@ async function handleDeleteItem() {
   .form-row select,
   .form-row button { width: 100%; }
   .menu-meta-fields { grid-template-columns: 1fr; }
+  .nutrition-fields { grid-template-columns: 1fr; }
+  .nutrition-fields textarea { grid-column: auto; }
   .menu-item { align-items: stretch; flex-direction: column; gap: 0.75rem; }
   .menu-item-info { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
   .menu-item-actions { display: grid; grid-template-columns: 1fr 1fr; }

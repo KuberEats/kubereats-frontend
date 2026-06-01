@@ -47,6 +47,7 @@ function storeCurrentUser(user: User) {
 const authenticatedUser = ref<Pick<User, 'id' | 'role'> | null>(readStoredUser())
 const authCheckPending = ref(false)
 let authCheckId = 0
+const profileRequiredRoutes = new Set(['merchant-list', 'merchant-detail', 'checkout'])
 
 const isLoggedIn = computed(() => {
   void currentRoute.value // track route changes
@@ -114,7 +115,7 @@ watch(
 
     if (
       authenticatedUser.value?.role === 'employee' &&
-      currentRoute.value.name !== 'profile-onboarding' &&
+      profileRequiredRoutes.has(currentRoute.value.name) &&
       !hasCompletedCustomerProfile(authenticatedUser.value.id)
     ) {
       navigateTo('/profile/onboarding')

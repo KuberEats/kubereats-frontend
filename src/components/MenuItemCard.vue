@@ -43,6 +43,13 @@ const complianceBadges = computed(() => [
   ...(props.item.allergens ?? []).map(allergen => `含${allergen}`),
   ...(props.item.certifications ?? []),
 ])
+
+const nutritionFacts = computed(() => [
+  props.item.caloriesKcal != null ? `${props.item.caloriesKcal} kcal` : '',
+  props.item.proteinG != null ? `蛋白質 ${props.item.proteinG}g` : '',
+  props.item.carbsG != null ? `碳水 ${props.item.carbsG}g` : '',
+  props.item.fatG != null ? `脂肪 ${props.item.fatG}g` : '',
+].filter(Boolean))
 </script>
 
 <template>
@@ -66,6 +73,23 @@ const complianceBadges = computed(() => [
           {{ badge }}
         </span>
       </div>
+      <div
+        v-if="nutritionFacts.length"
+        class="nutrition-row"
+      >
+        <span
+          v-for="fact in nutritionFacts"
+          :key="fact"
+        >
+          {{ fact }}
+        </span>
+      </div>
+      <p
+        v-if="item.servingSize || item.ingredients"
+        class="meal-extra"
+      >
+        {{ [item.servingSize, item.ingredients].filter(Boolean).join(' · ') }}
+      </p>
       <PriceText :value="item.price" />
     </div>
 
@@ -111,5 +135,20 @@ const complianceBadges = computed(() => [
   padding: 4px 7px;
   font-size: 12px;
   font-weight: 800;
+}
+
+.nutrition-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.meal-extra {
+  color: var(--color-muted);
+  font-size: 13px;
 }
 </style>

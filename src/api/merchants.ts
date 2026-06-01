@@ -91,6 +91,14 @@ export function createMenuItem(data: {
   allergens?: string[]
   certifications?: string[]
   imageUrl?: string
+  caloriesKcal?: number | null
+  proteinG?: number | null
+  carbsG?: number | null
+  fatG?: number | null
+  sodiumMg?: number | null
+  sugarG?: number | null
+  servingSize?: string | null
+  ingredients?: string | null
 }): Promise<MenuItem> {
   return apiRequest<MenuItem>('/merchants/menu', {
     method: 'POST',
@@ -115,11 +123,19 @@ export function updateMenuItem(menuId: number, data: Partial<{
   itemName: string
   price: number
   maxDailyQuantity: number
-  imageId: string
+  imageId?: string
   dietaryType: DietaryType
   allergens: string[]
   certifications: string[]
   imageUrl: string
+  caloriesKcal: number | null
+  proteinG: number | null
+  carbsG: number | null
+  fatG: number | null
+  sodiumMg: number | null
+  sugarG: number | null
+  servingSize: string | null
+  ingredients: string | null
 }>): Promise<MenuItem> {
   return apiRequest<MenuItem>(`/merchants/menu/${menuId}`, {
     method: 'PUT',
