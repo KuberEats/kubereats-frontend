@@ -104,6 +104,9 @@ export interface ReservationRequestPayload {
   service_date: string
   pickup_slot: string
   pickup_option: PickupOption
+  comments?: string
+  diner_name?: string
+  diner_phone?: string
   items: {
     menu_id: number
     quantity: number
@@ -141,6 +144,8 @@ export interface ReservationStatusResponse {
   items?: ReservationStatusItem[]
   order_time?: string
   comments?: string
+  diner_name?: string
+  diner_phone?: string
 }
 
 export interface OrderItem {

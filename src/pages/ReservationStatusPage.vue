@@ -258,6 +258,14 @@ watch(() => props.orderToken, startPolling)
           <dt>{{ t('reservation.orderTime') }}</dt>
           <dd>{{ formatDateTime(reservation.order_time) }}</dd>
         </div>
+        <div v-if="reservation?.diner_name">
+          <dt>{{ t('reservation.dinerName') }}</dt>
+          <dd>{{ reservation.diner_name }}</dd>
+        </div>
+        <div v-if="reservation?.diner_phone">
+          <dt>{{ t('reservation.dinerPhone') }}</dt>
+          <dd>{{ reservation.diner_phone }}</dd>
+        </div>
         <div v-if="reservation?.comments">
           <dt>{{ t('reservation.comments') }}</dt>
           <dd>{{ reservation.comments }}</dd>

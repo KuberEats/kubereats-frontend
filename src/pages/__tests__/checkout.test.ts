@@ -61,6 +61,9 @@ describe('CheckoutPage', () => {
     })
 
     const wrapper = mount(CheckoutPage)
+    await wrapper.get('input[autocomplete="name"]').setValue('王小明')
+    await wrapper.get('input[autocomplete="tel"]').setValue('0912345678')
+    await wrapper.get('textarea').setValue('少冰，餐點分開裝')
     await wrapper.get('[data-testid="checkout-submit-button"]').trigger('click')
     await flushPromises()
 
@@ -68,6 +71,9 @@ describe('CheckoutPage', () => {
       expect.objectContaining({
         user_id: 1,
         merchant_id: 7,
+        comments: '少冰，餐點分開裝',
+        diner_name: '王小明',
+        diner_phone: '0912345678',
         items: [{ menu_id: 11, quantity: 1 }],
       }),
       'idem-key-1',
