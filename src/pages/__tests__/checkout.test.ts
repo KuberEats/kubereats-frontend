@@ -54,7 +54,7 @@ afterEach(() => {
 })
 
 describe('CheckoutPage', () => {
-  it('submits successfully and shows success state', async () => {
+  it('submits successfully and navigates to the live reservation status page', async () => {
     mocks.createReservationRequest.mockResolvedValue({
       order_token: 'public-token',
       status: 'PENDING_RESERVATION',
@@ -78,8 +78,8 @@ describe('CheckoutPage', () => {
       }),
       'idem-key-1',
     )
-    expect(wrapper.text()).toContain('預訂已送出')
     expect(localStorage.getItem('latestReservationOrderToken')).toBe('public-token')
+    expect(mocks.navigateTo).toHaveBeenCalledWith('/reservation-status/public-token')
   })
 
   it('keeps the cart and shows retryable failure', async () => {

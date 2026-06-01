@@ -141,6 +141,7 @@ async function submitOrder() {
     dinerName.value = ''
     dinerPhone.value = ''
     comments.value = ''
+    navigateTo(`/reservation-status/${encodeURIComponent(reservation.order_token)}`)
   } catch (error) {
     submitError.value = formatOrderError(error)
   } finally {
