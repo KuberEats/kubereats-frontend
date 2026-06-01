@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, dev]
   pull_request:
@@ -45,7 +46,36 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm install
-      - run: npm run test:run
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+
+  sonarqube:
+    name: SonarQube
+    runs-on:
+      - self-hosted
+      - kubereats-internal
+      - sonarqube
+      - frontend
+      - linux
+    needs: test
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_HOST_URL: http://192.168.17.11:31090
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build:
     name: Build
