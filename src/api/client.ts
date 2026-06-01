@@ -1,4 +1,5 @@
 import { navigateTo } from '../router'
+import { getMessage } from '../i18n'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -77,7 +78,7 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw new ApiError({
-        message: '請求已取消，請重新操作。',
+        message: getMessage('api.aborted'),
         status: 0,
         code: 'network_error',
         details: error,
@@ -85,7 +86,7 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
     }
 
     throw new ApiError({
-      message: '網路連線失敗，請檢查網路後再試。',
+      message: getMessage('api.network'),
       status: 0,
       code: 'network_error',
       details: error,
@@ -111,7 +112,7 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
         : window.location.pathname
       navigateTo(`/login?returnUrl=${encodeURIComponent(returnUrl || '/merchants')}`)
       throw new ApiError({
-        message: '登入已逾期，請重新登入後繼續。',
+        message: getMessage('api.unauthorized'),
         status: 401,
         code: 'unauthorized',
       })
@@ -217,12 +218,12 @@ function statusToCode(status: number): ApiErrorCode {
 }
 
 function humanStatusMessage(status: number) {
-  if (status === 400) return '送出的資料格式有誤，請確認後再試。'
-  if (status === 401) return '登入已逾期，請重新登入。'
-  if (status === 403) return '目前帳號沒有權限執行此操作。'
-  if (status === 404) return '找不到 requested 資料，請返回上一頁重試。'
-  if (status === 409) return '資料狀態已變更，請重新整理後再試。'
-  if (status === 422) return '資料驗證失敗，請檢查欄位內容。'
-  if (status >= 500) return '伺服器暫時無法處理，請稍後再試。'
+  if (status === 400) return getMessage('api.badRequest')
+  if (status === 401) return getMessage('api.unauthorized')
+  if (status === 403) return getMessage('api.forbidden')
+  if (status === 404) return getMessage('api.notFound')
+  if (status === 409) return getMessage('api.conflict')
+  if (status === 422) return getMessage('api.validation')
+  if (status >= 500) return getMessage('api.server')
   return `請求失敗（${status}），請稍後再試。`
 }

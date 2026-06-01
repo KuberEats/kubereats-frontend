@@ -12,6 +12,7 @@ import StatusBadge from '../components/ux/StatusBadge.vue'
 import ToastNotification from '../components/ux/ToastNotification.vue'
 import { formatDateTime } from '../utils/formatters'
 import { navigateTo } from '../router'
+import { useI18n } from '../i18n'
 
 const props = defineProps<{
   orderId?: number
@@ -23,12 +24,13 @@ const isUpdating = ref(false)
 const errorMessage = ref('')
 const toastMessage = ref('')
 const isCancelDialogOpen = ref(false)
+const { t } = useI18n()
 
 const statusLabel = computed(() => {
   if (!order.value) return ''
-  if (order.value.orderStatus === 1) return '完成'
-  if (order.value.orderStatus === 2) return '取消'
-  return '處理中'
+  if (order.value.orderStatus === 1) return t('status.done')
+  if (order.value.orderStatus === 2) return t('status.cancelled')
+  return t('status.processing')
 })
 
 const statusTone = computed<'success' | 'warning' | 'danger' | 'neutral'>(() => {
@@ -40,7 +42,7 @@ const statusTone = computed<'success' | 'warning' | 'danger' | 'neutral'>(() => 
 
 const canCancel = computed(() => order.value?.orderStatus === 0)
 const cancelDisabledReason = computed(() =>
-  canCancel.value ? '' : '只有處理中的訂單可以取消。',
+  canCancel.value ? '' : t('orderDetail.cancelReason'),
 )
 
 async function fetchOrder() {
@@ -52,7 +54,7 @@ async function fetchOrder() {
   try {
     order.value = await getOrderById(props.orderId)
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '訂單資料讀取失敗'
+    errorMessage.value = error instanceof Error ? error.message : t('orderDetail.loadFailed')
   } finally {
     isLoading.value = false
   }
@@ -66,10 +68,10 @@ async function setStatus(status: number) {
 
   try {
     order.value = await updateOrderStatus(order.value.id, status)
-    toastMessage.value = status === 2 ? '訂單已取消' : '訂單已更新'
+    toastMessage.value = status === 2 ? t('orderDetail.cancelSuccess') : t('orderDetail.updateSuccess')
     isCancelDialogOpen.value = false
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '訂單狀態更新失敗'
+    errorMessage.value = error instanceof Error ? error.message : t('orderDetail.updateFailed')
   } finally {
     isUpdating.value = false
   }
@@ -82,9 +84,9 @@ watch(() => props.orderId, fetchOrder)
 <template>
   <main class="page">
     <PageHeader
-      eyebrow="Order Detail"
-      :title="order ? `訂單 #${order.id}` : '訂單詳情'"
-      subtitle="查看狀態、餐點明細與金額。"
+      :eyebrow="t('orderDetail.eyebrow')"
+      :title="order ? t('orderDetail.title', { id: order.id }) : t('orderDetail.titleFallback')"
+      :subtitle="t('orderDetail.subtitle')"
     >
       <template #action>
         <button
@@ -92,7 +94,7 @@ watch(() => props.orderId, fetchOrder)
           type="button"
           @click="navigateTo('/orders')"
         >
-          返回訂單
+          {{ t('orderDetail.back') }}
         </button>
       </template>
     </PageHeader>
@@ -100,7 +102,7 @@ watch(() => props.orderId, fetchOrder)
     <ErrorState
       v-if="errorMessage"
       :message="errorMessage"
-      retry-label="重新載入"
+      :retry-label="t('action.reload')"
       show-home
       @retry="fetchOrder"
       @home="navigateTo('/orders')"
@@ -110,7 +112,7 @@ watch(() => props.orderId, fetchOrder)
       v-else-if="isLoading"
       variant="card"
       :rows="2"
-      label="訂單載入中"
+      :label="t('orderDetail.loading')"
     />
 
     <section
@@ -121,9 +123,9 @@ watch(() => props.orderId, fetchOrder)
         <div class="section-title-row">
           <div>
             <p class="eyebrow">
-              Items
+              {{ t('orderDetail.items') }}
             </p>
-            <h2>餐點明細</h2>
+            <h2>{{ t('orderDetail.items') }}</h2>
           </div>
           <PriceText :value="order.totalAmount" />
         </div>
@@ -143,7 +145,7 @@ watch(() => props.orderId, fetchOrder)
         </div>
 
         <div class="total-row">
-          <span>總金額</span>
+          <span>{{ t('orderDetail.totalAmount') }}</span>
           <PriceText :value="order.totalAmount" />
         </div>
       </SectionCard>
@@ -152,9 +154,9 @@ watch(() => props.orderId, fetchOrder)
         <div class="section-title-row">
           <div>
             <p class="eyebrow">
-              Status
+              {{ t('orderDetail.status') }}
             </p>
-            <h2>訂單狀態</h2>
+            <h2>{{ t('orderDetail.status') }}</h2>
           </div>
           <StatusBadge
             :label="statusLabel"
@@ -164,10 +166,10 @@ watch(() => props.orderId, fetchOrder)
 
         <ol class="status-timeline">
           <li class="done">
-            建立訂單：{{ formatDateTime(order.createdAt || order.orderTime) }}
+            {{ t('orderDetail.created', { time: formatDateTime(order.createdAt || order.orderTime) }) }}
           </li>
           <li :class="{ done: order.orderStatus !== 0 }">
-            {{ statusLabel }}：{{ formatDateTime(order.updatedAt) || '等待更新' }}
+            {{ t('orderDetail.updated', { status: statusLabel, time: formatDateTime(order.updatedAt) || t('orderDetail.waiting') }) }}
           </li>
         </ol>
 
@@ -179,7 +181,7 @@ watch(() => props.orderId, fetchOrder)
             :title="cancelDisabledReason"
             @click="isCancelDialogOpen = true"
           >
-            {{ isUpdating ? '處理中' : '取消訂單' }}
+            {{ isUpdating ? t('orderDetail.cancelPending') : t('orderDetail.cancel') }}
           </button>
           <span
             v-if="!canCancel"
@@ -196,7 +198,7 @@ watch(() => props.orderId, fetchOrder)
             class="finance-row"
           >
             <span>{{ record.merchantName }}</span>
-            <strong>結算 <PriceText :value="record.settlementAmount" /></strong>
+            <strong>{{ t('orderDetail.settlement') }} <PriceText :value="record.settlementAmount" /></strong>
           </div>
         </div>
       </SectionCard>
@@ -204,9 +206,9 @@ watch(() => props.orderId, fetchOrder)
 
     <ConfirmDialog
       :open="isCancelDialogOpen"
-      title="取消訂單"
-      message="取消後可能無法復原，確定要取消這筆訂單嗎？"
-      confirm-label="確認取消"
+      :title="t('orderDetail.confirmCancelTitle')"
+      :message="t('orderDetail.confirmCancelMessage')"
+      :confirm-label="t('orderDetail.confirmCancel')"
       tone="danger"
       :loading="isUpdating"
       @cancel="isCancelDialogOpen = false"

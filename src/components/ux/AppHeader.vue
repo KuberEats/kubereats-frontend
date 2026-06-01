@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RouteName } from '../../router'
+import { useI18n, type Locale } from '../../i18n'
 
 defineProps<{
   activeRoute: RouteName
@@ -11,8 +12,15 @@ defineEmits<{
   logout: []
 }>()
 
+const { locale, setLocale, t } = useI18n()
+
 function isActive(activeRoute: RouteName, routes: RouteName[]) {
   return routes.includes(activeRoute)
+}
+
+function handleLocaleChange(event: Event) {
+  const nextLocale = (event.target as HTMLSelectElement).value as Locale
+  setLocale(nextLocale)
 }
 </script>
 
@@ -21,15 +29,15 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
     <button
       class="brand-button"
       type="button"
-      aria-label="回到首頁"
+      :aria-label="t('app.home')"
       @click="$emit('navigate', '/merchants')"
     >
-      KuberEats
+      {{ t('app.brand') }}
     </button>
 
     <nav
       class="desktop-nav"
-      aria-label="主要導覽"
+      :aria-label="t('app.primaryNav')"
     >
       <button
         v-if="userRole === 'employee'"
@@ -37,7 +45,7 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
         :class="{ active: isActive(activeRoute, ['merchant-list', 'merchant-detail']) }"
         @click="$emit('navigate', '/merchants')"
       >
-        商家
+        {{ t('app.nav.merchants') }}
       </button>
       <button
         v-if="userRole === 'employee'"
@@ -45,7 +53,7 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
         :class="{ active: isActive(activeRoute, ['order-history', 'order-detail', 'reservation-status']) }"
         @click="$emit('navigate', '/orders')"
       >
-        訂單
+        {{ t('app.nav.orders') }}
       </button>
       <button
         v-if="userRole === 'employee'"
@@ -53,7 +61,7 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
         :class="{ active: activeRoute === 'staff-expenses' }"
         @click="$emit('navigate', '/staff/expenses')"
       >
-        支出
+        {{ t('app.nav.expenses') }}
       </button>
       <button
         v-if="userRole === 'merchant'"
@@ -61,7 +69,7 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
         :class="{ active: activeRoute === 'merchant-dashboard' }"
         @click="$emit('navigate', '/merchant/dashboard')"
       >
-        商家後台
+        {{ t('app.nav.merchantDashboard') }}
       </button>
       <button
         v-if="userRole === 'merchant'"
@@ -69,7 +77,7 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
         :class="{ active: activeRoute === 'merchant-orders' }"
         @click="$emit('navigate', '/merchant/orders')"
       >
-        今日訂單
+        {{ t('app.nav.todayOrders') }}
       </button>
       <button
         v-if="userRole === 'committee'"
@@ -77,17 +85,35 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
         :class="{ active: activeRoute === 'committee-review' }"
         @click="$emit('navigate', '/committee/review')"
       >
-        商家審核
+        {{ t('app.nav.review') }}
       </button>
     </nav>
 
-    <button
-      class="logout-button"
-      type="button"
-      @click="$emit('logout')"
-    >
-      登出
-    </button>
+    <div class="header-actions">
+      <label class="language-select">
+        <span class="sr-only">{{ t('app.language') }}</span>
+        <select
+          :value="locale"
+          :aria-label="t('app.language')"
+          @change="handleLocaleChange"
+        >
+          <option value="zh-TW">
+            中文
+          </option>
+          <option value="en">
+            English
+          </option>
+        </select>
+      </label>
+
+      <button
+        class="logout-button"
+        type="button"
+        @click="$emit('logout')"
+      >
+        {{ t('app.logout') }}
+      </button>
+    </div>
   </header>
 </template>
 
@@ -111,6 +137,12 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
 .logout-button {
   border: 0;
   background: transparent;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brand-button {
@@ -139,6 +171,16 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
 
 .logout-button {
   color: #b91c1c;
+}
+
+.language-select select {
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 6px 10px;
+  font-weight: 800;
 }
 
 @media (max-width: 760px) {

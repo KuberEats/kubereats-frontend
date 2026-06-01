@@ -73,6 +73,20 @@ test('user can browse merchants and open merchant detail', async ({ page }) => {
   await expect(page.getByText('今日菜單')).toBeVisible()
 })
 
+test('user can switch language and keep preference after reload', async ({ page }) => {
+  await mockApi(page)
+
+  await page.goto('/#/merchants')
+  await page.getByLabel('語言').selectOption('en')
+
+  await expect(page.getByRole('heading', { name: '竹科 Ordering' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Orders' })).toBeVisible()
+
+  await page.reload()
+
+  await expect(page.getByRole('heading', { name: '竹科 Ordering' })).toBeVisible()
+})
+
 test('user can add item to cart and reach checkout', async ({ page }) => {
   await mockApi(page)
 

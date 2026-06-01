@@ -8,14 +8,16 @@ import LoadingState from '../components/ux/LoadingState.vue'
 import PageHeader from '../components/ux/PageHeader.vue'
 import MerchantCard from '../components/MerchantCard.vue'
 import { navigateTo } from '../router'
+import { useI18n, type MessageKey } from '../i18n'
 
 const campuses: Campus[] = ['竹科', '南科', '中科', '高科']
+const { t } = useI18n()
 
-const sortOptions: { label: string; value: SortKey | 'name' }[] = [
-  { label: '系統推薦', value: 'recommend' },
-  { label: '最多人美食', value: 'people' },
-  { label: '最常美食', value: 'popular' },
-  { label: '名稱排序', value: 'name' },
+const sortOptions: { labelKey: MessageKey; value: SortKey | 'name' }[] = [
+  { labelKey: 'merchantList.sort.recommend', value: 'recommend' },
+  { labelKey: 'merchantList.sort.people', value: 'people' },
+  { labelKey: 'merchantList.sort.popular', value: 'popular' },
+  { labelKey: 'merchantList.sort.name', value: 'name' },
 ]
 
 const selectedCampus = ref<Campus>('竹科')
@@ -38,9 +40,9 @@ const categoryFilters = computed(() => {
 })
 
 const filterChips = computed(() => [
-  { label: '全部', value: 'all' },
-  { label: '營業中', value: 'open' },
-  { label: '熱門', value: 'hot' },
+  { label: t('merchantList.filter.all'), value: 'all' },
+  { label: t('merchantList.filter.open'), value: 'open' },
+  { label: t('merchantList.filter.hot'), value: 'hot' },
   ...categoryFilters.value.map(category => ({ label: category, value: category })),
 ])
 
@@ -91,7 +93,7 @@ async function fetchMerchants() {
       selectedSort.value === 'name' ? 'popular' : selectedSort.value,
     )
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '商家資料讀取失敗'
+    errorMessage.value = error instanceof Error ? error.message : t('merchantList.loadFailed')
   } finally {
     isLoading.value = false
   }
@@ -131,7 +133,7 @@ async function submitRecommendationPrompt() {
   const prompt = recommendationPrompt.value.trim()
 
   if (!prompt) {
-    errorMessage.value = '請先輸入你今天想吃什麼。'
+    errorMessage.value = t('merchantList.promptRequired')
     return
   }
 
@@ -149,7 +151,7 @@ async function submitRecommendationPrompt() {
     isRecommendationMode.value = true
     isRecommendationDialogOpen.value = false
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '系統推薦失敗'
+    errorMessage.value = error instanceof Error ? error.message : t('merchantList.recommendFailed')
   } finally {
     isRecommendationLoading.value = false
   }
@@ -162,17 +164,17 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
 <template>
   <main class="page">
     <PageHeader
-      eyebrow="KuberEats Order"
-      :title="`${selectedCampus} 今日訂餐`"
-      subtitle="搜尋店名、分類或標籤，快速找到今天想吃的餐點。"
+      :eyebrow="t('merchantList.eyebrow')"
+      :title="t('merchantList.title', { campus: selectedCampus })"
+      :subtitle="t('merchantList.subtitle')"
     >
       <template #action>
         <label class="date-picker">
-          <span>日期</span>
+          <span>{{ t('merchantList.date') }}</span>
           <input
             v-model="selectedDate"
             type="date"
-            aria-label="訂餐日期"
+            :aria-label="t('merchantList.date')"
           >
         </label>
       </template>
@@ -196,12 +198,12 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
 
     <section class="search-panel">
       <label class="search-box">
-        <span class="sr-only">搜尋商家</span>
+        <span class="sr-only">{{ t('merchantList.search') }}</span>
         <input
           v-model="searchQuery"
           type="search"
-          placeholder="搜尋店名、分類、標籤"
-          aria-label="搜尋商家"
+          :placeholder="t('merchantList.searchPlaceholder')"
+          :aria-label="t('merchantList.search')"
         >
       </label>
 
@@ -233,7 +235,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
           type="button"
           @click="selectSort(option.value)"
         >
-          {{ option.label }}
+          {{ t(option.labelKey) }}
         </button>
       </div>
     </section>
@@ -246,21 +248,21 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
         <p class="eyebrow">
           Recommendation
         </p>
-        <h2>系統推薦：{{ lastRecommendationPrompt }}</h2>
+        <h2>{{ t('merchantList.recommendation', { prompt: lastRecommendationPrompt }) }}</h2>
       </div>
       <button
         class="ghost-button"
         type="button"
         @click="isRecommendationDialogOpen = true"
       >
-        重新輸入
+        {{ t('merchantList.reInput') }}
       </button>
     </section>
 
     <ErrorState
       v-if="errorMessage"
       :message="errorMessage"
-      retry-label="重新載入"
+      :retry-label="t('action.reload')"
       @retry="fetchMerchants"
     />
 
@@ -268,7 +270,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
       v-else-if="isLoading"
       variant="list"
       :rows="4"
-      label="商家載入中"
+      :label="t('merchantList.loading')"
     />
 
     <section
@@ -287,9 +289,9 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
     <EmptyState
       v-else
       icon="?"
-      title="找不到符合條件的商家"
-      description="試著清除搜尋或切換園區、分類。"
-      action-label="清除篩選"
+      :title="t('merchantList.emptyTitle')"
+      :description="t('merchantList.emptyDescription')"
+      :action-label="t('merchantList.clearFilters')"
       @action="clearFilters"
     />
 
@@ -311,7 +313,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
               System Recommendation
             </p>
             <h2 id="recommendation-dialog-title">
-              想吃什麼？
+              {{ t('merchantList.dialogTitle') }}
             </h2>
           </div>
           <button
@@ -320,7 +322,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
             :disabled="isRecommendationLoading"
             @click="closeRecommendationDialog"
           >
-            關閉
+            {{ t('merchantList.close') }}
           </button>
         </div>
 
@@ -328,7 +330,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
           v-model="recommendationPrompt"
           class="recommendation-input"
           rows="4"
-          placeholder="例如：今天想吃清爽一點，不要牛肉，最好 150 以下"
+          :placeholder="t('merchantList.dialogPlaceholder')"
           @keydown.meta.enter.prevent="submitRecommendationPrompt"
           @keydown.ctrl.enter.prevent="submitRecommendationPrompt"
         />
@@ -340,7 +342,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
             :disabled="isRecommendationLoading"
             @click="submitRecommendationPrompt"
           >
-            {{ isRecommendationLoading ? '推薦中' : '求推薦' }}
+            {{ isRecommendationLoading ? t('merchantList.recommending') : t('merchantList.askRecommend') }}
           </button>
         </div>
       </section>

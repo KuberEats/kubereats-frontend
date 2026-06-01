@@ -4,6 +4,7 @@ import { login, register } from '../api/auth'
 import { setTokens } from '../api/client'
 import { navigateTo } from '../router'
 import type { UserRole } from '../api/types'
+import { useI18n } from '../i18n'
 
 const isRegister = ref(false)
 const username = ref('')
@@ -12,6 +13,7 @@ const role = ref<UserRole>('employee')
 const error = ref('')
 const successMessage = ref('')
 const loading = ref(false)
+const { t } = useI18n()
 
 async function handleSubmit() {
   error.value = ''
@@ -24,7 +26,7 @@ async function handleSubmit() {
       isRegister.value = false
       error.value = ''
       password.value = ''
-      successMessage.value = '註冊成功，請登入。'
+      successMessage.value = t('login.registerSuccess')
       return
     }
 
@@ -46,7 +48,7 @@ async function handleSubmit() {
       navigateTo('/merchants')
     }
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : '操作失敗'
+    error.value = e instanceof Error ? e.message : t('login.failed')
   } finally {
     loading.value = false
   }
@@ -66,30 +68,30 @@ function getReturnUrl() {
   <div class="login-page">
     <div class="login-card">
       <h1>KuberEats</h1>
-      <h2>{{ isRegister ? '註冊' : '登入' }}</h2>
+      <h2>{{ isRegister ? t('login.registerTitle') : t('login.title') }}</h2>
 
       <form
         data-testid="auth-form"
         @submit.prevent="handleSubmit"
       >
         <div class="form-group">
-          <label>帳號</label>
+          <label>{{ t('login.username') }}</label>
           <input
             v-model="username"
             data-testid="auth-username-input"
             type="text"
-            placeholder="請輸入帳號"
+            :placeholder="t('login.usernamePlaceholder')"
             required
           >
         </div>
 
         <div class="form-group">
-          <label>密碼</label>
+          <label>{{ t('login.password') }}</label>
           <input
             v-model="password"
             data-testid="auth-password-input"
             type="password"
-            placeholder="請輸入密碼"
+            :placeholder="t('login.passwordPlaceholder')"
             required
           >
         </div>
@@ -98,19 +100,19 @@ function getReturnUrl() {
           v-if="isRegister"
           class="form-group"
         >
-          <label>角色</label>
+          <label>{{ t('login.role') }}</label>
           <select
             v-model="role"
             data-testid="auth-role-select"
           >
             <option value="employee">
-              員工
+              {{ t('login.employee') }}
             </option>
             <option value="merchant">
-              商家
+              {{ t('login.merchant') }}
             </option>
             <option value="committee">
-              福委會
+              {{ t('login.committee') }}
             </option>
           </select>
         </div>
@@ -136,19 +138,19 @@ function getReturnUrl() {
           data-testid="auth-submit-button"
           :disabled="loading"
         >
-          {{ loading ? '處理中...' : (isRegister ? '註冊' : '登入') }}
+          {{ loading ? t('login.pending') : (isRegister ? t('login.submitRegister') : t('login.submitLogin')) }}
         </button>
       </form>
 
       <p class="toggle-text">
-        {{ isRegister ? '已有帳號？' : '還沒有帳號？' }}
+        {{ isRegister ? t('login.hasAccount') : t('login.noAccount') }}
         <button
           type="button"
           class="link-button"
           data-testid="auth-mode-toggle"
           @click="isRegister = !isRegister; error = ''; successMessage = ''"
         >
-          {{ isRegister ? '登入' : '註冊' }}
+          {{ isRegister ? t('login.submitLogin') : t('login.submitRegister') }}
         </button>
       </p>
     </div>

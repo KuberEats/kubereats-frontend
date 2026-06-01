@@ -13,6 +13,7 @@ import PageHeader from '../components/ux/PageHeader.vue'
 import StatusBadge from '../components/ux/StatusBadge.vue'
 import ToastNotification from '../components/ux/ToastNotification.vue'
 import { navigateTo } from '../router'
+import { useI18n } from '../i18n'
 
 const props = defineProps<{
   merchantId?: number
@@ -26,6 +27,7 @@ const loadErrorMessage = ref('')
 const cartMessage = ref('')
 const selectedServiceDate = ref(formatDateInput(new Date()))
 const selectedPickupSlot = ref('12:00-12:30')
+const { t } = useI18n()
 
 const pickupSlots = ['11:30-12:00', '12:00-12:30', '12:30-13:00', '18:00-18:30']
 const minServiceDate = formatDateInput(new Date())
@@ -34,7 +36,7 @@ const maxServiceDate = formatDateInput(addDays(new Date(), 7))
 const groupedMenuItems = computed(() => {
   const groups = new Map<string, MenuItem[]>()
   for (const item of menuItems.value) {
-    const key = item.category || '今日菜單'
+    const key = item.category || t('detail.menuGroup')
     groups.set(key, [...(groups.get(key) || []), item])
   }
   return Array.from(groups.entries()).map(([category, items]) => ({ category, items }))
@@ -74,7 +76,7 @@ async function fetchMerchantDetail() {
     menuItems.value = menuData
     syncCartOptions()
   } catch (error) {
-    loadErrorMessage.value = error instanceof Error ? error.message : '商家資料讀取失敗'
+    loadErrorMessage.value = error instanceof Error ? error.message : t('detail.loadFailed')
   } finally {
     isLoading.value = false
   }
@@ -83,7 +85,7 @@ async function fetchMerchantDetail() {
 function addToCart(menuItem: MenuItem) {
   syncCartOptions()
   cart.addItem(menuItem)
-  cartMessage.value = `${menuItem.itemName} 已加入購物車`
+  cartMessage.value = t('detail.addedToCart', { name: menuItem.itemName })
 }
 
 function setQuantity(menuId: number, quantity: number) {
@@ -104,9 +106,9 @@ function goCheckout() {
 }
 
 function validateServiceDate(date: string) {
-  if (!date) return '請選擇預訂日期。'
-  if (date < minServiceDate) return '無法預訂過去日期，請重新選擇。'
-  if (date > maxServiceDate) return '僅能預訂今天起 7 天內的餐點。'
+  if (!date) return t('detail.dateRequired')
+  if (date < minServiceDate) return t('detail.invalidPastDate')
+  if (date > maxServiceDate) return t('detail.invalidFutureDate')
   return ''
 }
 
@@ -118,9 +120,9 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
 <template>
   <main class="page detail-page">
     <PageHeader
-      eyebrow="Menu"
-      :title="merchant?.name || '商家菜單'"
-      :subtitle="merchant ? `${merchant.campus} · ${merchant.category}` : '選擇餐點加入購物車'"
+      :eyebrow="t('detail.eyebrow')"
+      :title="merchant?.name || t('detail.titleFallback')"
+      :subtitle="merchant ? `${merchant.campus} · ${merchant.category}` : t('detail.subtitleFallback')"
     >
       <template #action>
         <button
@@ -128,7 +130,7 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
           type="button"
           @click="navigateTo('/merchants')"
         >
-          返回商家
+          {{ t('detail.back') }}
         </button>
       </template>
     </PageHeader>
@@ -145,7 +147,7 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
       v-else-if="isLoading"
       variant="list"
       :rows="4"
-      label="商家與菜單載入中"
+      :label="t('detail.loading')"
     />
 
     <template v-else-if="merchant">
@@ -163,7 +165,7 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
               <h1>{{ merchant.name }}</h1>
             </div>
             <StatusBadge
-              :label="merchant.isOpen === false ? '暫停接單' : '可訂餐'"
+              :label="merchant.isOpen === false ? t('status.closed') : t('status.open')"
               :tone="merchant.isOpen === false ? 'warning' : 'success'"
             />
           </div>
@@ -172,8 +174,8 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
           </p>
           <div class="merchant-meta">
             <span v-if="merchant.rating">★ {{ merchant.rating }}</span>
-            <span v-if="merchant.orderCount !== undefined">{{ merchant.orderCount }} 人訂過</span>
-            <span v-if="merchant.minOrder !== undefined">低消 ${{ merchant.minOrder }}</span>
+            <span v-if="merchant.orderCount !== undefined">{{ t('merchantCard.orderCount', { count: merchant.orderCount }) }}</span>
+            <span v-if="merchant.minOrder !== undefined">{{ t('merchantCard.minOrder') }} ${{ merchant.minOrder }}</span>
             <span v-if="merchant.deliveryTime">{{ merchant.deliveryTime }}</span>
           </div>
           <div class="tag-list">
@@ -191,21 +193,21 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
         <div class="menu-section">
           <div class="reservation-controls">
             <label class="date-picker vertical">
-              <span>預訂日期</span>
+              <span>{{ t('detail.date') }}</span>
               <input
                 v-model="selectedServiceDate"
                 type="date"
                 :min="minServiceDate"
                 :max="maxServiceDate"
-                aria-label="預訂日期"
+                :aria-label="t('detail.date')"
               >
             </label>
 
             <label class="date-picker vertical">
-              <span>取餐時段</span>
+              <span>{{ t('detail.pickupSlot') }}</span>
               <select
                 v-model="selectedPickupSlot"
-                aria-label="取餐時段"
+                :aria-label="t('detail.pickupSlot')"
               >
                 <option
                   v-for="slot in pickupSlots"
@@ -221,8 +223,8 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
           <EmptyState
             v-if="menuItems.length === 0"
             icon="?"
-            title="目前沒有可訂餐點"
-            description="商家尚未上架今日菜單，請稍後再回來查看。"
+            :title="t('detail.emptyTitle')"
+            :description="t('detail.emptyDescription')"
           />
 
           <template v-else>
@@ -260,7 +262,7 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
           :items="cart.items.value"
           :submitting="false"
           :min-order="merchant.minOrder"
-          submit-label="前往確認訂單"
+          :submit-label="t('detail.checkout')"
           @increase="menuId => setQuantity(menuId, (cartQuantities.get(menuId) || 0) + 1)"
           @decrease="menuId => setQuantity(menuId, (cartQuantities.get(menuId) || 0) - 1)"
           @submit="goCheckout"

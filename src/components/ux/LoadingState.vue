@@ -1,13 +1,19 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import { computed } from 'vue'
+import { useI18n } from '../../i18n'
+
+const props = withDefaults(defineProps<{
   variant?: 'card' | 'list' | 'skeleton'
   rows?: number
   label?: string
 }>(), {
   variant: 'card',
   rows: 3,
-  label: '載入中',
+  label: undefined,
 })
+
+const { t } = useI18n()
+const resolvedLabel = computed(() => props.label || t('state.loading'))
 </script>
 
 <template>
@@ -15,7 +21,7 @@ withDefaults(defineProps<{
     class="loading-state"
     :class="`variant-${variant}`"
     role="status"
-    :aria-label="label"
+    :aria-label="resolvedLabel"
   >
     <div
       v-for="row in rows"

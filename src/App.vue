@@ -23,6 +23,9 @@ import { currentRoute, navigateTo } from './router'
 import { clearTokens, getAccessToken } from './api/client'
 import { getMe } from './api/auth'
 import type { User } from './api/types'
+import { useI18n } from './i18n'
+
+const { t } = useI18n()
 
 function readStoredUser() {
   const user = localStorage.getItem('user')
@@ -121,7 +124,7 @@ watch(
       v-if="authCheckPending"
       class="auth-loading"
     >
-      驗證登入狀態...
+      {{ t('app.authChecking') }}
     </div>
     <LoginPage v-else-if="currentRoute.name === 'login'" />
     <AppShell

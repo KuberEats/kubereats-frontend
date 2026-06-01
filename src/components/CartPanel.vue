@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import type { CartItem } from '../api/types'
 import PriceText from './ux/PriceText.vue'
 import QuantityStepper from './ux/QuantityStepper.vue'
+import { useI18n } from '../i18n'
+import { formatMoney } from '../utils/formatters'
 
 const props = defineProps<{
   items: CartItem[]
@@ -18,6 +20,8 @@ defineEmits<{
   submit: []
 }>()
 
+const { t } = useI18n()
+
 const total = computed(() =>
   props.items.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0),
 )
@@ -30,6 +34,10 @@ const minimumGap = computed(() => {
   if (typeof props.minOrder !== 'number') return 0
   return Math.max(0, props.minOrder - total.value)
 })
+
+const minimumGapText = computed(() =>
+  t('cart.minimumGap', { amount: formatMoney(minimumGap.value) }),
+)
 </script>
 
 <template>
@@ -42,7 +50,7 @@ const minimumGap = computed(() => {
         <p class="eyebrow">
           Cart
         </p>
-        <h2>購物車</h2>
+        <h2>{{ t('cart.title') }}</h2>
       </div>
       <PriceText :value="total" />
     </div>
@@ -51,7 +59,7 @@ const minimumGap = computed(() => {
       v-if="items.length === 0"
       class="empty-box"
     >
-      尚未選擇餐點。
+      {{ t('cart.empty') }}
     </div>
 
     <div
@@ -83,9 +91,9 @@ const minimumGap = computed(() => {
       v-if="items.length > 0"
       class="cart-summary"
     >
-      <span>{{ itemCount }} 份餐點</span>
-      <span v-if="minimumGap > 0">還差 <PriceText :value="minimumGap" /> 達低消</span>
-      <strong>合計 <PriceText :value="total" /></strong>
+      <span>{{ t('cart.itemCount', { count: itemCount }) }}</span>
+      <span v-if="minimumGap > 0">{{ minimumGapText }}</span>
+      <strong>{{ t('cart.total') }} <PriceText :value="total" /></strong>
     </div>
 
     <div
@@ -94,7 +102,7 @@ const minimumGap = computed(() => {
       data-testid="cart-error"
       role="alert"
     >
-      <strong>訂單無法送出</strong>
+      <strong>{{ t('cart.errorTitle') }}</strong>
       <span>{{ errorMessage }}</span>
     </div>
 
@@ -105,7 +113,7 @@ const minimumGap = computed(() => {
       :disabled="items.length === 0 || submitting || minimumGap > 0"
       @click="$emit('submit')"
     >
-      {{ submitting ? '處理中' : (submitLabel || '前往確認訂單') }}
+      {{ submitting ? t('cart.pending') : (submitLabel || t('detail.checkout')) }}
     </button>
   </aside>
 </template>
