@@ -20,7 +20,10 @@ const total = computed(() =>
 </script>
 
 <template>
-  <aside class="cart-panel">
+  <aside
+    class="cart-panel"
+    data-testid="cart-panel"
+  >
     <div class="section-title-row">
       <div>
         <p class="eyebrow">
@@ -41,6 +44,7 @@ const total = computed(() =>
     <div
       v-else
       class="cart-list"
+      data-testid="cart-items"
     >
       <div
         v-for="item in items"
@@ -73,6 +77,7 @@ const total = computed(() =>
     <div
       v-if="errorMessage"
       class="cart-error"
+      data-testid="cart-error"
       role="alert"
     >
       <strong>訂單無法送出</strong>
@@ -82,6 +87,7 @@ const total = computed(() =>
     <button
       class="primary-button full-width"
       type="button"
+      data-testid="submit-order-button"
       :disabled="items.length === 0 || submitting"
       @click="$emit('submit')"
     >

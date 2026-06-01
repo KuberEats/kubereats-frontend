@@ -56,11 +56,15 @@ async function handleSubmit() {
       <h1>KuberEats</h1>
       <h2>{{ isRegister ? '註冊' : '登入' }}</h2>
 
-      <form @submit.prevent="handleSubmit">
+      <form
+        data-testid="auth-form"
+        @submit.prevent="handleSubmit"
+      >
         <div class="form-group">
           <label>帳號</label>
           <input
             v-model="username"
+            data-testid="auth-username-input"
             type="text"
             placeholder="請輸入帳號"
             required
@@ -71,6 +75,7 @@ async function handleSubmit() {
           <label>密碼</label>
           <input
             v-model="password"
+            data-testid="auth-password-input"
             type="password"
             placeholder="請輸入密碼"
             required
@@ -113,6 +118,7 @@ async function handleSubmit() {
         <button
           type="submit"
           class="btn-primary"
+          data-testid="auth-submit-button"
           :disabled="loading"
         >
           {{ loading ? '處理中...' : (isRegister ? '註冊' : '登入') }}
@@ -124,6 +130,7 @@ async function handleSubmit() {
         <button
           type="button"
           class="link-button"
+          data-testid="auth-mode-toggle"
           @click="isRegister = !isRegister; error = ''; successMessage = ''"
         >
           {{ isRegister ? '登入' : '註冊' }}

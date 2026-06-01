@@ -175,11 +175,17 @@ watch(() => props.orderToken, startPolling)
   <main class="reservation-status-page">
     <section
       class="reservation-status-card"
+      data-testid="reservation-status-card"
       :class="statusTone"
     >
       <span class="status-icon">{{ statusIcon }}</span>
-      <span class="status-badge">{{ statusChip }}</span>
-      <h1>{{ title }}</h1>
+      <span
+        class="status-badge"
+        data-testid="reservation-status-chip"
+      >{{ statusChip }}</span>
+      <h1 data-testid="reservation-status-title">
+        {{ title }}
+      </h1>
       <p>{{ subtitle }}</p>
 
       <p

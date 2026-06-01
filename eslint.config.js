@@ -8,6 +8,17 @@ export default [
   {
     ignores: ['dist/**', 'node_modules/**', 'public/**', '*.config.js', '*.config.ts'],
   },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...vue.configs['flat/recommended'],

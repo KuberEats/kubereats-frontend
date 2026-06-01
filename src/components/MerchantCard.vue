@@ -13,6 +13,8 @@ defineEmits<{
 <template>
   <article
     class="merchant-card"
+    :data-testid="`merchant-card-${merchant.id}`"
+    :data-merchant-name="merchant.name"
     @click="$emit('select', merchant.id)"
   >
     <div class="merchant-image">
