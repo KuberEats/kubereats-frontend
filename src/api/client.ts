@@ -59,8 +59,11 @@ export function getAccessToken() {
 }
 
 export async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
+  // For FormData bodies, let the browser set Content-Type (with the multipart
+  // boundary); forcing application/json would corrupt file uploads.
+  const isFormData = options?.body instanceof FormData
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...options?.headers as Record<string, string>,
   }
 

@@ -72,7 +72,7 @@ export interface MenuItem {
   itemName: string
   price: number
   maxDailyQuantity: number
-  imageId: string | null
+  imageUrl: string | null
   category?: string | null
   description?: string | null
   isAvailable?: boolean
