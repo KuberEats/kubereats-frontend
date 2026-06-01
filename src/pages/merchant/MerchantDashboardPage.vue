@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { getMyMerchant, listMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from '../../api/merchants'
+import { getMyMerchant, listMenuItems, createMenuItem, updateMenuItem, deleteMenuItem, uploadMenuImage } from '../../api/merchants'
 import { navigateTo } from '../../router'
 import type { DietaryType, MerchantInfo, MenuItem } from '../../api/types'
 import ConfirmDialog from '../../components/ConfirmDialog.vue'
@@ -37,6 +37,10 @@ const certificationOptions = ['SGS', 'HACCP', 'ISO 22000', '清真', '產銷履�
 
 const newItem = ref<MenuFormState>(createEmptyMenuForm())
 const editItem = ref<MenuFormState>(createEmptyMenuForm())
+const newItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0, imageUrl: '' })
+const editItem = ref({ itemName: '', price: 0, maxDailyQuantity: 0, imageUrl: '' })
+const uploadingNew = ref(false)
+const uploadingEdit = ref(false)
 
 const auditStatusText: Record<number, string> = {
   0: '待審核',
@@ -99,6 +103,7 @@ async function handleAddItem() {
     menuItems.value.push(item)
     showAddForm.value = false
     newItem.value = createEmptyMenuForm()
+    newItem.value = { itemName: '', price: 0, maxDailyQuantity: 0, imageUrl: '' }
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '新增失敗'
   }
@@ -113,6 +118,29 @@ function startEdit(item: MenuItem) {
     dietaryType: (item.dietaryType as DietaryType | undefined) ?? 'MEAT',
     allergens: [...(item.allergens ?? [])],
     certifications: [...(item.certifications ?? [])],
+    imageUrl: item.imageUrl ?? '',
+  }
+}
+
+async function handleImageSelect(event: Event, target: 'new' | 'edit') {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  error.value = ''
+  if (target === 'new') uploadingNew.value = true
+  else uploadingEdit.value = true
+
+  try {
+    const { imageUrl } = await uploadMenuImage(file)
+    if (target === 'new') newItem.value.imageUrl = imageUrl
+    else editItem.value.imageUrl = imageUrl
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : '圖片上傳失敗'
+  } finally {
+    uploadingNew.value = false
+    uploadingEdit.value = false
+    input.value = ''
   }
 }
 
@@ -274,6 +302,7 @@ async function handleDeleteItem() {
             <button
               class="btn-primary btn-small"
               data-testid="merchant-menu-create-button"
+              :disabled="uploadingNew"
               @click="handleAddItem"
             >
               新增
@@ -308,6 +337,24 @@ async function handleDeleteItem() {
                 {{ certification }}
               </label>
             </fieldset>
+          <div class="image-row">
+            <label class="upload-btn">
+              {{ uploadingNew ? '上傳中…' : (newItem.imageUrl ? '更換圖片' : '上傳圖片') }}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                :disabled="uploadingNew"
+                data-testid="merchant-menu-image-input"
+                @change="handleImageSelect($event, 'new')"
+              >
+            </label>
+            <img
+              v-if="newItem.imageUrl"
+              :src="newItem.imageUrl"
+              class="image-preview"
+              alt="菜品圖片預覽"
+            >
           </div>
         </div>
 
@@ -351,6 +398,7 @@ async function handleDeleteItem() {
               </select>
               <button
                 class="btn-small btn-primary"
+                :disabled="uploadingEdit"
                 @click="handleUpdateItem(item.id)"
               >
                 儲存
@@ -391,10 +439,33 @@ async function handleDeleteItem() {
                   {{ certification }}
                 </label>
               </fieldset>
+            <div class="image-row">
+              <label class="upload-btn">
+                {{ uploadingEdit ? '上傳中…' : (editItem.imageUrl ? '更換圖片' : '上傳圖片') }}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  :disabled="uploadingEdit"
+                  @change="handleImageSelect($event, 'edit')"
+                >
+              </label>
+              <img
+                v-if="editItem.imageUrl"
+                :src="editItem.imageUrl"
+                class="image-preview"
+                alt="菜品圖片預覽"
+              >
             </div>
           </template>
           <template v-else>
             <div class="menu-item-info">
+              <img
+                v-if="item.imageUrl"
+                :src="item.imageUrl"
+                class="menu-item-thumb"
+                :alt="item.itemName"
+              >
               <strong>{{ item.itemName }}</strong>
               <span>${{ item.price }}</span>
               <span>每日限量 {{ item.maxDailyQuantity }} 份</span>
@@ -465,6 +536,11 @@ async function handleDeleteItem() {
 .form-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .form-row input { flex: 1; min-width: 100px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
 .form-row select { min-width: 120px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
+.image-row { display: flex; gap: 0.75rem; align-items: center; margin-top: 0.75rem; }
+.upload-btn { display: inline-block; padding: 0.4rem 0.75rem; border: 1px dashed #bbb; border-radius: 4px; background: #fafafa; color: #555; cursor: pointer; font-size: 0.85rem; }
+.upload-btn:hover { background: #f0f0f0; border-color: #999; }
+.image-preview { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+.menu-item-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
 .menu-item { display: flex; justify-content: space-between; align-items: center; }
 .menu-item-info { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
 .menu-item-actions { display: flex; gap: 0.5rem; }

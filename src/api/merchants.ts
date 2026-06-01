@@ -90,10 +90,20 @@ export function createMenuItem(data: {
   dietaryType?: DietaryType
   allergens?: string[]
   certifications?: string[]
+  imageUrl?: string
 }): Promise<MenuItem> {
   return apiRequest<MenuItem>('/merchants/menu', {
     method: 'POST',
     body: JSON.stringify(data),
+  })
+}
+
+export function uploadMenuImage(file: File): Promise<{ imageUrl: string }> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return apiRequest<{ imageUrl: string }>('/merchants/menu/images', {
+    method: 'POST',
+    body: formData,
   })
 }
 
@@ -109,6 +119,7 @@ export function updateMenuItem(menuId: number, data: Partial<{
   dietaryType: DietaryType
   allergens: string[]
   certifications: string[]
+  imageUrl: string
 }>): Promise<MenuItem> {
   return apiRequest<MenuItem>(`/merchants/menu/${menuId}`, {
     method: 'PUT',

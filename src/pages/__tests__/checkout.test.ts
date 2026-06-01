@@ -22,7 +22,7 @@ const menuItem = {
   itemName: '雞腿便當',
   price: 120,
   maxDailyQuantity: 20,
-  imageId: null,
+  imageUrl: null,
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
 }

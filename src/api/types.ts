@@ -77,6 +77,7 @@ export interface MenuItem {
   dietaryType?: DietaryType | string | null
   allergens?: string[]
   certifications?: string[]
+  imageUrl: string | null
   category?: string | null
   description?: string | null
   isAvailable?: boolean
