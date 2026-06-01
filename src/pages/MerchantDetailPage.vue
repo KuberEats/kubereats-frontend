@@ -122,6 +122,11 @@ async function submitOrder() {
       return
     }
 
+    if (!reservation.order_token) {
+      orderErrorMessage.value = '系統未回傳預訂查詢代碼，請稍後到訂單紀錄確認。'
+      return
+    }
+
     localStorage.setItem('latestReservationOrderToken', reservation.order_token)
     localStorage.removeItem('currentReservationAttempt')
     navigateTo(`/reservation-status/${encodeURIComponent(reservation.order_token)}`)

@@ -109,4 +109,51 @@ describe('order scheduler API routes', () => {
       { method: 'POST' },
     )
   })
+
+  it('normalizes reservation tokens from camelCase backend responses', async () => {
+    mocks.apiRequest.mockResolvedValueOnce({
+      reservationId: 4,
+      reservationToken: 'reservation-token',
+      orderToken: 'order-token',
+      status: 'PENDING_RESERVATION',
+      message: 'accepted',
+    })
+
+    const result = await createReservationRequest(reservationPayload)
+
+    expect(result).toEqual({
+      reservation_id: '4',
+      order_token: 'order-token',
+      status: 'PENDING_RESERVATION',
+      message: 'accepted',
+    })
+  })
+
+  it('normalizes reservation status fields from camelCase backend responses', async () => {
+    mocks.apiRequest.mockResolvedValueOnce({
+      orderToken: 'public-token',
+      status: 'RESERVED',
+      serviceDate: '2026-06-07',
+      pickupSlot: '12:00-12:30',
+      pickupOption: 'SELF_PICKUP',
+      pickupNumber: null,
+      createdAt: '2026-06-01T00:00:00Z',
+      items: [{ id: 1, menuItemId: 11, itemName: '雞腿便當', unitPrice: 120 }],
+    })
+
+    const result = await getReservationStatus('public-token')
+
+    expect(result.order_token).toBe('public-token')
+    expect(result.service_date).toBe('2026-06-07')
+    expect(result.pickup_slot).toBe('12:00-12:30')
+    expect(result.pickup_option).toBe('SELF_PICKUP')
+    expect(result.order_time).toBe('2026-06-01T00:00:00Z')
+    expect(result.items?.[0]).toEqual(
+      expect.objectContaining({
+        menu_id: 11,
+        item_name: '雞腿便當',
+        unit_price: 120,
+      }),
+    )
+  })
 })
