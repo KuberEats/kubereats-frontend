@@ -371,7 +371,7 @@ async function login(page: Page, account: Account, role: UserRole) {
   await page.getByTestId('auth-submit-button').click()
 
   if (role === 'committee') {
-    await expect(page).toHaveURL(/\/committee\/review$/, { timeout: defaultTimeout })
+    await expect(page).toHaveURL(/#\/committee\/review$/, { timeout: defaultTimeout })
     return
   }
 
@@ -380,7 +380,7 @@ async function login(page: Page, account: Account, role: UserRole) {
     return
   }
 
-  await expect(page).toHaveURL(/\/merchants$/, { timeout: defaultTimeout })
+  await expect(page).toHaveURL(/#\/merchants$/, { timeout: defaultTimeout })
 }
 
 async function logout(page: Page) {

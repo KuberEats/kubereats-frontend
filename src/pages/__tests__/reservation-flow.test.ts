@@ -2,7 +2,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../../App.vue'
 import { clearTokens, setTokens } from '../../api/client'
+import { useCart } from '../../composables/useCart'
 import { navigateTo } from '../../router'
+import CheckoutPage from '../CheckoutPage.vue'
 import MerchantDetailPage from '../MerchantDetailPage.vue'
 import ReservationStatusPage from '../ReservationStatusPage.vue'
 
@@ -108,6 +110,7 @@ async function mountMerchantDetail() {
 beforeEach(() => {
   clearTokens()
   localStorage.clear()
+  useCart().clearCart()
   localStorage.setItem('user', JSON.stringify({ id: 1, role: 'employee' }))
   vi.stubGlobal('crypto', { randomUUID: () => 'idem-key-1' })
   mocks.getMerchantDetail.mockReset()
@@ -148,6 +151,12 @@ describe('reservation request flow', () => {
     await wrapper.find('.primary-button.full-width').trigger('click')
     await flushPromises()
 
+    expect(mocks.navigateTo).toHaveBeenCalledWith('/checkout')
+
+    const checkout = mount(CheckoutPage)
+    await checkout.find('[data-testid="checkout-submit-button"]').trigger('click')
+    await flushPromises()
+
     expect(mocks.createReservationRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         user_id: 1,
@@ -158,7 +167,7 @@ describe('reservation request flow', () => {
       'idem-key-1',
     )
     expect(localStorage.getItem('latestReservationOrderToken')).toBe('public-token')
-    expect(mocks.navigateTo).toHaveBeenCalledWith('/reservation-status/public-token')
+    expect(checkout.text()).toContain('預訂已送出')
   })
 
   it('rejects service dates beyond seven days', async () => {

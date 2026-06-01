@@ -22,7 +22,7 @@ export default defineConfig({
   outputDir: 'test-results/playwright',
   webServer: shouldStartServer
     ? {
-        command: 'npm run dev -- --host 127.0.0.1',
+        command: 'corepack npm run dev -- --host 127.0.0.1',
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
