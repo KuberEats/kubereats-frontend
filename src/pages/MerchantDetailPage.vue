@@ -324,14 +324,10 @@ watch([selectedServiceDate, selectedPickupSlot], syncCartOptions)
   }
 
   .sticky-cart {
-    position: fixed;
-    right: 12px;
-    bottom: 76px;
-    left: 12px;
-    z-index: 35;
-    max-height: min(46vh, 420px);
-    overflow: auto;
-    box-shadow: 0 18px 48px rgba(17, 24, 39, 0.2);
+    position: static;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
   }
 }
 
