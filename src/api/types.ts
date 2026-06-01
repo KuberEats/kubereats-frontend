@@ -35,6 +35,8 @@ export interface Merchant {
   minOrder?: number
   deliveryTime: string
   tags: string[]
+  isOpen?: boolean
+  description?: string
   score?: number
   reason?: string
   signals?: Record<string, unknown>
@@ -71,6 +73,9 @@ export interface MenuItem {
   price: number
   maxDailyQuantity: number
   imageId: string | null
+  category?: string | null
+  description?: string | null
+  isAvailable?: boolean
   createdAt: string
   updatedAt: string
 }

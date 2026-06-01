@@ -6,7 +6,15 @@ import globals from 'globals'
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'public/**', '*.config.js', '*.config.ts'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'playwright-report/**',
+      'public/**',
+      'test-results/**',
+      '*.config.js',
+      '*.config.ts',
+    ],
   },
   {
     files: ['scripts/**/*.mjs'],

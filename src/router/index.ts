@@ -10,6 +10,7 @@ export type RouteName =
   | 'committee-review'
   | 'merchant-list'
   | 'merchant-detail'
+  | 'checkout'
   | 'order-history'
   | 'order-detail'
   | 'reservation-status'
@@ -25,10 +26,18 @@ interface AppRoute {
 }
 
 function normalizePath(path: string) {
-  if (path.length > 1 && path.endsWith('/')) {
-    return path.slice(0, -1)
+  const [routePath, query = ''] = path.split('?')
+  const normalizedRoute = routePath.length > 1 && routePath.endsWith('/')
+    ? routePath.slice(0, -1)
+    : routePath
+  if (query) {
+    return `${normalizedRoute}?${query}`
   }
-  return path
+  return normalizedRoute
+}
+
+function routeOnly(path: string) {
+  return path.split('?')[0]
 }
 
 function getHashPath() {
@@ -63,7 +72,7 @@ function replaceLegacyPathWithHashRoute() {
 }
 
 function parseRoute(path: string): AppRoute {
-  path = normalizePath(path)
+  path = routeOnly(normalizePath(path))
 
   if (path === '/' || path === '/login') {
     return { name: 'login', params: {} }
@@ -119,6 +128,9 @@ function parseRoute(path: string): AppRoute {
 
   if (path === '/merchants') {
     return { name: 'merchant-list', params: {} }
+  }
+  if (path === '/checkout') {
+    return { name: 'checkout', params: {} }
   }
   if (path === '/orders') {
     return { name: 'order-history', params: {} }
