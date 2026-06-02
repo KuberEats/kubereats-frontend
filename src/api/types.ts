@@ -210,6 +210,7 @@ export interface TodayOrderSummary {
   totalOrders: number
   totalAmount: number
   items: OrderItemSummary[]
+  userIds?: number[]
 }
 
 // ── 你的：福委會審核 ──
