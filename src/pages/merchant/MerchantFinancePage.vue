@@ -76,8 +76,13 @@ async function handleGenerateReport() {
   actionMessage.value = ''
   try {
     const result = await generateReport(merchant.value.id)
-    window.open(result.url, '_blank')
-    actionMessage.value = '報表已產生，已在新分頁開啟。'
+    const link = document.createElement('a')
+    link.href = result.url
+    link.download = result.filename || `report_merchant_${merchant.value.id}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    actionMessage.value = '報表已產生，已開始下載。'
   } catch (e: unknown) {
     error.value = '報表產生失敗：' + (e instanceof Error ? e.message : '未知錯誤')
   } finally {

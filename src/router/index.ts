@@ -6,7 +6,6 @@ export type RouteName =
   | 'merchant-dashboard'
   | 'merchant-orders'
   | 'merchant-finance'
-  | 'merchant-finance-reports'
   | 'committee-review'
   | 'profile-onboarding'
   | 'merchant-list'
@@ -91,9 +90,6 @@ function parseRoute(path: string): AppRoute {
   }
   if (path === '/merchant/finance') {
     return { name: 'merchant-finance', params: {} }
-  }
-  if (path === '/merchant/finance-reports') {
-    return { name: 'merchant-finance-reports', params: {} }
   }
   if (path === '/committee/review') {
     return { name: 'committee-review', params: {} }

@@ -9,7 +9,6 @@ import CommitteeReviewPage from './pages/committee/CommitteeReviewPage.vue'
 // finance / tagging 頁面
 import MerchantFinancePage from './pages/merchant/MerchantFinancePage.vue'
 import StaffExpensesPage from './pages/StaffExpensesPage.vue'
-import FinanceReportPage from './pages/committee/FinanceReportPage.vue'
 // 組員的頁面
 import MerchantDetailPage from './pages/MerchantDetailPage.vue'
 import MerchantListPage from './pages/MerchantListPage.vue'
@@ -154,7 +153,6 @@ watch(
       <!-- finance / tagging 頁面 -->
       <MerchantFinancePage v-else-if="currentRoute.name === 'merchant-finance'" />
       <StaffExpensesPage v-else-if="currentRoute.name === 'staff-expenses'" />
-      <FinanceReportPage v-else-if="currentRoute.name === 'merchant-finance-reports'" />
       <!-- 組員的頁面 -->
       <ProfileOnboardingPage v-else-if="currentRoute.name === 'profile-onboarding'" />
       <MerchantListPage v-else-if="currentRoute.name === 'merchant-list'" />

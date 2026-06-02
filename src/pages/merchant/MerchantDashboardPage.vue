@@ -280,13 +280,6 @@ async function handleDeleteItem() {
             <span class="finance-btn-icon">$</span>
             <span>收入總覽</span>
           </button>
-          <button
-            class="finance-btn"
-            @click="navigateTo('/merchant/finance-reports')"
-          >
-            <span class="finance-btn-icon">PDF</span>
-            <span>財務報表</span>
-          </button>
         </div>
 
         <div class="section-header">

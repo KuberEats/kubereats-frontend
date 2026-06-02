@@ -156,7 +156,6 @@ jobs:
             "merchant/dashboard"
             "merchant/orders"
             "merchant/finance"
-            "merchant/finance-reports"
             "committee/review"
             "staff/expenses"
             "merchants"
