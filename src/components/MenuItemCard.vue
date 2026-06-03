@@ -50,6 +50,8 @@ const nutritionFacts = computed(() => [
   props.item.carbsG != null ? `碳水 ${props.item.carbsG}g` : '',
   props.item.fatG != null ? `脂肪 ${props.item.fatG}g` : '',
 ].filter(Boolean))
+
+const imageAlt = computed(() => `${props.item.itemName} 圖片`)
 </script>
 
 <template>
@@ -59,7 +61,15 @@ const nutritionFacts = computed(() => [
     :data-testid="`menu-item-${item.id}`"
     :data-menu-item-name="item.itemName"
   >
-    <div>
+    <img
+      v-if="item.imageUrl"
+      class="menu-item-image"
+      :src="item.imageUrl"
+      :alt="imageAlt"
+      loading="lazy"
+      decoding="async"
+    >
+    <div class="menu-item-body">
       <h3>{{ item.itemName }}</h3>
       <p v-if="item.description">
         {{ item.description }}
@@ -117,6 +127,20 @@ const nutritionFacts = computed(() => [
 </template>
 
 <style scoped>
+.menu-item-image {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  flex-shrink: 0;
+}
+
+.menu-item-body {
+  min-width: 0;
+}
+
 .menu-item-card.unavailable {
   opacity: 0.68;
 }
@@ -150,5 +174,12 @@ const nutritionFacts = computed(() => [
 .meal-extra {
   color: var(--color-muted);
   font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .menu-item-image {
+    width: 72px;
+    height: 72px;
+  }
 }
 </style>

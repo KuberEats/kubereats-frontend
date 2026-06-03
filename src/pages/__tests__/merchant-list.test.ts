@@ -70,6 +70,17 @@ describe('MerchantListPage', () => {
     expect(wrapper.text()).not.toContain('阿明便當')
   })
 
+  it('does not search merchant tags', async () => {
+    mocks.listMerchants.mockResolvedValue(merchants)
+    const wrapper = mount(MerchantListPage)
+    await flushPromises()
+
+    await wrapper.get('input[type="search"]').setValue('雞腿飯')
+
+    expect(wrapper.text()).toContain('找不到符合條件的商家')
+    expect(wrapper.text()).not.toContain('阿明便當')
+  })
+
   it('shows empty state and clears filters', async () => {
     mocks.listMerchants.mockResolvedValue(merchants)
     const wrapper = mount(MerchantListPage)
@@ -80,6 +91,18 @@ describe('MerchantListPage', () => {
 
     await wrapper.get('.empty-state-panel button').trigger('click')
     expect(wrapper.text()).toContain('阿明便當')
+  })
+
+  it('sorts least ordered merchants locally', async () => {
+    mocks.listMerchants.mockResolvedValue(merchants)
+    const wrapper = mount(MerchantListPage)
+    await flushPromises()
+
+    await wrapper.get('button[aria-label="排序：最少人美食"]').trigger('click')
+    await flushPromises()
+
+    const text = wrapper.text()
+    expect(text.indexOf('小森咖哩')).toBeLessThan(text.indexOf('阿明便當'))
   })
 
   it('shows retryable error state', async () => {

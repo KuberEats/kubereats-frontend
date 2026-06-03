@@ -13,16 +13,17 @@ import { useI18n, type MessageKey } from '../i18n'
 const campuses: Campus[] = ['竹科', '南科', '中科', '高科']
 const { t } = useI18n()
 
-const sortOptions: { labelKey: MessageKey; value: SortKey | 'name' }[] = [
+type MerchantSortOption = SortKey | 'leastPeople'
+
+const sortOptions: { labelKey: MessageKey; value: MerchantSortOption }[] = [
   { labelKey: 'merchantList.sort.recommend', value: 'recommend' },
   { labelKey: 'merchantList.sort.people', value: 'people' },
-  { labelKey: 'merchantList.sort.popular', value: 'popular' },
-  { labelKey: 'merchantList.sort.name', value: 'name' },
+  { labelKey: 'merchantList.sort.leastPeople', value: 'leastPeople' },
 ]
 
 const selectedCampus = ref<Campus>('竹科')
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
-const selectedSort = ref<SortKey | 'name'>('people')
+const selectedSort = ref<MerchantSortOption>('people')
 const selectedFilter = ref('all')
 const searchQuery = ref('')
 const merchants = ref<Merchant[]>([])
@@ -68,12 +69,13 @@ const visibleMerchants = computed(() => {
         merchant.category,
         merchant.campus,
         merchant.reason,
-        ...(merchant.tags || []),
       ].join(' ').toLowerCase()
       return searchable.includes(query)
     })
     .sort((a, b) => {
-      if (selectedSort.value === 'name') return a.name.localeCompare(b.name, 'zh-Hant')
+      if (selectedSort.value === 'leastPeople') {
+        return (a.orderCount ?? 0) - (b.orderCount ?? 0)
+      }
       return 0
     })
 })
@@ -90,7 +92,7 @@ async function fetchMerchants() {
     merchants.value = await listMerchants(
       selectedCampus.value,
       selectedDate.value,
-      selectedSort.value === 'name' ? 'popular' : selectedSort.value,
+      selectedSort.value === 'leastPeople' ? 'people' : selectedSort.value,
     )
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : t('merchantList.loadFailed')
@@ -99,7 +101,7 @@ async function fetchMerchants() {
   }
 }
 
-function selectSort(sort: SortKey | 'name') {
+function selectSort(sort: MerchantSortOption) {
   selectedSort.value = sort
   if (sort === 'recommend') {
     isRecommendationDialogOpen.value = true
@@ -233,6 +235,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
           class="pill-button"
           :class="{ active: selectedSort === option.value }"
           type="button"
+          :aria-label="`排序：${t(option.labelKey)}`"
           @click="selectSort(option.value)"
         >
           {{ t(option.labelKey) }}
