@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import {
   listPendingMerchants,
   listAllMerchants,
@@ -11,11 +11,11 @@ import type { MerchantInfo } from '../../api/types'
 import CommitteeMerchantCard from '../../components/committee/CommitteeMerchantCard.vue'
 import CommitteeReviewActionPanel from '../../components/committee/CommitteeReviewActionPanel.vue'
 
-const tab = ref<'pending' | 'all'>('pending')
+const tab = shallowRef<'pending' | 'all'>('pending')
 const merchants = ref<MerchantInfo[]>([])
-const error = ref('')
-const loading = ref(true)
-const reviewing = ref(false)
+const error = shallowRef('')
+const loading = shallowRef(true)
+const reviewing = shallowRef(false)
 const pendingReview = ref<{ merchant: MerchantInfo; action: 'approve' | 'reject' | 'suspend' } | null>(null)
 
 const auditStatusText: Record<number, string> = {
@@ -24,6 +24,15 @@ const auditStatusText: Record<number, string> = {
   2: '已拒絕',
   3: '已停權',
 }
+
+const pendingCount = computed(() => merchants.value.filter(merchant => merchant.auditStatus === 0).length)
+const approvedCount = computed(() => merchants.value.filter(merchant => merchant.auditStatus === 1).length)
+const suspendedCount = computed(() => merchants.value.filter(merchant => merchant.auditStatus === 3).length)
+const toolbarDescription = computed(() => (
+  tab.value === 'pending'
+    ? '只顯示尚未完成審核的商家申請，適合每日快速處理。'
+    : '檢視所有商家狀態，包含已通過、已拒絕與停權紀錄。'
+))
 
 async function loadMerchants() {
   loading.value = true
@@ -96,25 +105,71 @@ onMounted(loadMerchants)
 </script>
 
 <template>
-  <div class="page-container">
-    <h2>福委會 — 商家審核</h2>
+  <div class="committee-page">
+    <header class="review-hero">
+      <div class="review-heading">
+        <p class="review-eyebrow">
+          Committee console
+        </p>
+        <h2>福委會 — 商家審核</h2>
+        <p class="review-subtitle">
+          集中處理新商家准入、合作期限與停權管理，讓審核狀態一眼可讀。
+        </p>
+      </div>
 
-    <div class="tabs">
-      <button
-        :class="['tab', { active: tab === 'pending' }]"
-        data-testid="committee-pending-tab"
-        @click="switchTab('pending')"
+      <div
+        class="review-summary"
+        aria-label="商家審核摘要"
       >
-        待審核
-      </button>
-      <button
-        :class="['tab', { active: tab === 'all' }]"
-        data-testid="committee-all-tab"
-        @click="switchTab('all')"
+        <div class="summary-item urgent">
+          <span>待處理</span>
+          <strong>{{ pendingCount }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>已通過</span>
+          <strong>{{ approvedCount }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>停權中</span>
+          <strong>{{ suspendedCount }}</strong>
+        </div>
+      </div>
+    </header>
+
+    <section
+      class="review-toolbar"
+      aria-label="審核清單篩選"
+    >
+      <div
+        class="tabs"
+        role="tablist"
+        aria-label="商家審核狀態"
       >
-        全部商家
-      </button>
-    </div>
+        <button
+          type="button"
+          :class="['tab', { active: tab === 'pending' }]"
+          :aria-selected="tab === 'pending'"
+          role="tab"
+          data-testid="committee-pending-tab"
+          @click="switchTab('pending')"
+        >
+          待審核
+        </button>
+        <button
+          type="button"
+          :class="['tab', { active: tab === 'all' }]"
+          :aria-selected="tab === 'all'"
+          role="tab"
+          data-testid="committee-all-tab"
+          @click="switchTab('all')"
+        >
+          全部商家
+        </button>
+      </div>
+      <p class="toolbar-description">
+        {{ toolbarDescription }}
+      </p>
+    </section>
 
     <div
       v-if="loading"
@@ -132,7 +187,7 @@ onMounted(loadMerchants)
 
     <div
       v-else
-      class="merchant-list"
+      class="review-list"
     >
       <CommitteeMerchantCard
         v-for="m in merchants"
@@ -165,19 +220,191 @@ onMounted(loadMerchants)
 </template>
 
 <style scoped>
-.page-container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-.tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-.tab {
-  padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px;
-  background: white; cursor: pointer; font-size: 0.9rem;
+.committee-page {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 28px 24px 64px;
 }
-.tab.active { background: #e74c3c; color: white; border-color: #e74c3c; }
-.loading { text-align: center; padding: 2rem; color: #999; }
-.notice { text-align: center; padding: 2rem; color: #999; background: #fafafa; border-radius: 8px; }
-.error-text { color: #e74c3c; font-size: 0.875rem; }
+
+.review-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 24px;
+  align-items: stretch;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 56%, #fff7ed 100%);
+  padding: 24px;
+}
+
+.review-heading {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.review-eyebrow {
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.review-heading h2 {
+  color: #111827;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.15;
+}
+
+.review-subtitle,
+.toolbar-description {
+  color: #6b7280;
+}
+
+.review-subtitle {
+  max-width: 620px;
+}
+
+.review-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summary-item {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 112px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 16px;
+}
+
+.summary-item span {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.summary-item strong {
+  color: #111827;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.summary-item.urgent {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.summary-item.urgent strong {
+  color: #c2410c;
+}
+
+.review-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: 4px;
+}
+
+.tab {
+  min-height: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5563;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.tab.active {
+  background: #ffffff;
+  color: #c2410c;
+  box-shadow: 0 1px 4px rgba(17, 24, 39, 0.12);
+}
+
+.toolbar-description {
+  font-size: 14px;
+  text-align: right;
+}
+
+.review-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding-bottom: 48px;
+}
+
+.loading,
+.notice {
+  margin-top: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 36px 18px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.error-text {
+  margin-top: 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+
+@media (max-width: 860px) {
+  .committee-page {
+    padding: 20px 16px 88px;
+  }
+
+  .review-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .review-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar-description {
+    text-align: left;
+  }
+}
 
 @media (max-width: 640px) {
-  .page-container { margin: 1rem auto; }
-  .tabs { display: grid; grid-template-columns: 1fr 1fr; }
+  .review-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
 }
 </style>

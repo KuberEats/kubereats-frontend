@@ -24,6 +24,11 @@ const title = computed(() => {
   if (props.action === 'suspend') return '停權商家'
   return '拒絕商家申請'
 })
+const helperText = computed(() => {
+  if (props.action === 'approve') return '設定合作期間後，商家即可開始上架菜單與接單。'
+  if (props.action === 'suspend') return '停權後商家暫時無法提供服務，原因會保留在審核紀錄。'
+  return '拒絕後此申請不會進入合作商家清單。'
+})
 
 const canSubmit = computed(() => {
   if (props.action === 'approve') return Boolean(startDate.value && endDate.value)
@@ -75,23 +80,48 @@ function submit() {
         aria-modal="true"
         @submit.prevent="submit"
       >
-        <h2>{{ title }}</h2>
-        <p>商家：{{ merchant.merchantName }}</p>
+        <div class="dialog-header">
+          <div>
+            <p class="dialog-eyebrow">
+              審核操作
+            </p>
+            <h2>{{ title }}</h2>
+          </div>
+          <button
+            class="dialog-close"
+            type="button"
+            :disabled="loading"
+            aria-label="關閉"
+            @click="$emit('cancel')"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="merchant-context">
+          <span>商家</span>
+          <strong>{{ merchant.merchantName }}</strong>
+          <small>{{ merchant.campus }} / {{ merchant.category }}</small>
+        </div>
+
+        <p class="dialog-helper">
+          {{ helperText }}
+        </p>
 
         <div
           v-if="action === 'approve'"
           class="field-grid"
         >
-          <label>
-            合作開始日
+          <label class="form-field">
+            <span>合作開始日</span>
             <input
               v-model="startDate"
               type="date"
               required
             >
           </label>
-          <label>
-            合作結束日
+          <label class="form-field">
+            <span>合作結束日</span>
             <input
               v-model="endDate"
               type="date"
@@ -102,9 +132,9 @@ function submit() {
 
         <label
           v-else-if="action === 'suspend'"
-          class="reason-field"
+          class="form-field reason-field"
         >
-          停權原因
+          <span>停權原因</span>
           <textarea
             v-model="reason"
             rows="4"
@@ -114,9 +144,12 @@ function submit() {
           />
         </label>
 
-        <p v-else>
+        <div
+          v-else
+          class="confirm-box"
+        >
           確定要拒絕這筆商家申請嗎？
-        </p>
+        </div>
 
         <div class="dialog-actions">
           <button
@@ -148,23 +181,82 @@ function submit() {
   z-index: 1000;
   display: grid;
   place-items: center;
-  background: rgba(17, 24, 39, 0.45);
+  background: rgba(17, 24, 39, 0.52);
   padding: 20px;
 }
 
 .dialog-panel {
-  width: min(460px, 100%);
+  display: grid;
+  gap: 16px;
+  width: min(500px, 100%);
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 24px 64px rgba(17, 24, 39, 0.24);
-  display: grid;
-  gap: 14px;
+  box-shadow: 0 24px 64px rgba(17, 24, 39, 0.26);
   padding: 22px;
 }
 
-.dialog-panel h2,
-.dialog-panel p {
-  margin: 0;
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dialog-eyebrow {
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dialog-header h2 {
+  margin-top: 4px;
+  color: #111827;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.dialog-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.merchant-context {
+  display: grid;
+  gap: 3px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: 12px 14px;
+}
+
+.merchant-context span,
+.merchant-context small,
+.dialog-helper {
+  color: #6b7280;
+}
+
+.merchant-context span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.merchant-context strong {
+  color: #111827;
+  font-size: 18px;
+}
+
+.merchant-context small,
+.dialog-helper {
+  font-size: 14px;
 }
 
 .field-grid {
@@ -173,53 +265,74 @@ function submit() {
   gap: 12px;
 }
 
-.field-grid label,
-.reason-field {
+.form-field {
   display: grid;
-  gap: 6px;
+  gap: 7px;
   color: #374151;
-  font-weight: 800;
+  font-weight: 900;
 }
 
-.field-grid input,
-.reason-field textarea {
+.form-field input,
+.form-field textarea {
+  width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  padding: 10px;
+  background: #ffffff;
+  padding: 11px 12px;
   font: inherit;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  border-color: #f97316;
+  outline: 3px solid #fed7aa;
 }
 
 .reason-field textarea {
   resize: vertical;
 }
 
+.confirm-box {
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 12px 14px;
+  font-weight: 800;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  padding-top: 4px;
 }
 
 .dialog-cancel,
 .dialog-confirm {
-  border: 0;
+  min-height: 42px;
   border-radius: 8px;
-  padding: 10px 14px;
-  font-weight: 800;
+  padding: 10px 16px;
+  font-weight: 900;
 }
 
 .dialog-cancel {
-  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
   color: #374151;
+}
+
+.dialog-confirm {
+  border: 1px solid transparent;
+  color: #ffffff;
 }
 
 .dialog-confirm.primary {
   background: #f97316;
-  color: #ffffff;
 }
 
 .dialog-confirm.danger {
   background: #dc2626;
-  color: #ffffff;
 }
 
 @media (max-width: 520px) {
@@ -228,7 +341,8 @@ function submit() {
   }
 
   .dialog-actions {
-    flex-direction: column-reverse;
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }
 </style>
