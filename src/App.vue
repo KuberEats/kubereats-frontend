@@ -19,10 +19,10 @@ import ReservationStatusPage from './pages/ReservationStatusPage.vue'
 import ProfileOnboardingPage from './pages/ProfileOnboardingPage.vue'
 import AppShell from './components/ux/AppShell.vue'
 
-import { currentRoute, navigateTo } from './router'
+import { currentRoute, navigateTo, type RouteName } from './router'
 import { clearTokens, getAccessToken } from './api/client'
 import { getMe } from './api/auth'
-import type { User } from './api/types'
+import type { User, UserRole } from './api/types'
 import { useI18n } from './i18n'
 import { hasCompletedCustomerProfile } from './composables/useCustomerProfile'
 
@@ -47,6 +47,27 @@ const authenticatedUser = ref<Pick<User, 'id' | 'role'> | null>(readStoredUser()
 const authCheckPending = ref(false)
 let authCheckId = 0
 const profileRequiredRoutes = new Set(['merchant-list', 'merchant-detail', 'checkout'])
+const allowedRoutesByRole: Record<UserRole, Set<RouteName>> = {
+  employee: new Set([
+    'profile-onboarding',
+    'merchant-list',
+    'merchant-detail',
+    'checkout',
+    'order-history',
+    'order-detail',
+    'reservation-status',
+    'staff-expenses',
+  ]),
+  merchant: new Set([
+    'merchant-apply',
+    'merchant-dashboard',
+    'merchant-orders',
+    'merchant-finance',
+  ]),
+  committee: new Set([
+    'committee-review',
+  ]),
+}
 
 const isLoggedIn = computed(() => {
   void currentRoute.value // track route changes
@@ -68,6 +89,10 @@ function handleLogout() {
   clearTokens()
   authenticatedUser.value = null
   navigateTo('/login')
+}
+
+function routeIsAllowedForRole(routeName: RouteName, role: UserRole) {
+  return allowedRoutesByRole[role].has(routeName)
 }
 
 async function validateSession() {
@@ -109,6 +134,12 @@ watch(
       if (currentRoute.value.name !== 'login') {
         navigateTo('/login')
       }
+      return
+    }
+
+    const role = authenticatedUser.value?.role
+    if (role && !routeIsAllowedForRole(currentRoute.value.name, role)) {
+      navigateTo(homePath.value)
       return
     }
 

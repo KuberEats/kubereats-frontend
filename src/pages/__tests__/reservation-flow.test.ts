@@ -34,9 +34,11 @@ const merchant = {
 const mocks = vi.hoisted(() => ({
   getMerchantDetail: vi.fn(),
   listMerchantMenuItems: vi.fn(),
+  listMenuItems: vi.fn(),
   createReservationRequest: vi.fn(),
   getReservationStatus: vi.fn(),
   getMe: vi.fn(),
+  getMyMerchant: vi.fn(),
   login: vi.fn(),
   register: vi.fn(),
   navigateTo: vi.fn(),
@@ -48,10 +50,10 @@ vi.mock('../../api/merchants', () => ({
   createMenuItem: vi.fn(),
   deleteMenuItem: vi.fn(),
   getMerchantDetail: mocks.getMerchantDetail,
-  getMyMerchant: vi.fn(),
+  getMyMerchant: mocks.getMyMerchant,
   getTodayOrders: vi.fn(),
   listMerchantMenuItems: mocks.listMerchantMenuItems,
-  listMenuItems: vi.fn(),
+  listMenuItems: mocks.listMenuItems,
   listMerchants: vi.fn(),
   updateMenuItem: vi.fn(),
   updateMyMerchant: vi.fn(),
@@ -115,9 +117,11 @@ beforeEach(() => {
   vi.stubGlobal('crypto', { randomUUID: () => 'idem-key-1' })
   mocks.getMerchantDetail.mockReset()
   mocks.listMerchantMenuItems.mockReset()
+  mocks.listMenuItems.mockReset()
   mocks.createReservationRequest.mockReset()
   mocks.getReservationStatus.mockReset()
   mocks.getMe.mockReset()
+  mocks.getMyMerchant.mockReset()
   mocks.login.mockReset()
   mocks.register.mockReset()
   mocks.getMe.mockResolvedValue({
@@ -129,6 +133,23 @@ beforeEach(() => {
     createdAt: '2026-06-01T00:00:00Z',
     updatedAt: '2026-06-01T00:00:00Z',
   })
+  mocks.getMyMerchant.mockResolvedValue({
+    id: 10,
+    userId: 2,
+    merchantName: '商家後台',
+    campus: '竹科',
+    category: '便當',
+    rating: 0,
+    orderCount: 0,
+    minOrder: 0,
+    maxOrderQuantity: 0,
+    deliveryTime: '12:00',
+    tags: [],
+    auditStatus: 1,
+    createdAt: '2026-06-01T00:00:00Z',
+    updatedAt: '2026-06-01T00:00:00Z',
+  })
+  mocks.listMenuItems.mockResolvedValue([])
   mocks.navigateTo.mockClear()
 })
 
@@ -298,6 +319,27 @@ describe('reservation status page', () => {
     expect(mocks.getMe).not.toHaveBeenCalled()
     expect(mocks.navigateTo).toHaveBeenCalledWith('/login')
     expect(wrapper.text()).toContain('登入')
+  })
+
+  it('redirects merchants away from employee ordering routes', async () => {
+    setTokens('merchant-access-token', 'merchant-refresh-token')
+    localStorage.setItem('user', JSON.stringify({ id: 2, role: 'merchant' }))
+    mocks.getMe.mockResolvedValue({
+      id: 2,
+      username: 'merchant@example.com',
+      email: null,
+      role: 'merchant',
+      isActive: true,
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    })
+    navigateTo('/merchants')
+
+    mount(App)
+    await flushPromises()
+
+    expect(mocks.navigateTo).toHaveBeenCalledWith('/merchant/dashboard')
+    expect(mocks.listMerchantMenuItems).not.toHaveBeenCalled()
   })
 
   it('shows a non-blocking warning after repeated polling failures', async () => {

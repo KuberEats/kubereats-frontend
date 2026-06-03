@@ -2,7 +2,7 @@
 import type { RouteName } from '../../router'
 import { useI18n, type Locale } from '../../i18n'
 
-defineProps<{
+const props = defineProps<{
   activeRoute: RouteName
   userRole: string | null
 }>()
@@ -18,6 +18,12 @@ function isActive(activeRoute: RouteName, routes: RouteName[]) {
   return routes.includes(activeRoute)
 }
 
+function homePath() {
+  if (props.userRole === 'merchant') return '/merchant/dashboard'
+  if (props.userRole === 'committee') return '/committee/review'
+  return '/merchants'
+}
+
 function handleLocaleChange(event: Event) {
   const nextLocale = (event.target as HTMLSelectElement).value as Locale
   setLocale(nextLocale)
@@ -30,7 +36,7 @@ function handleLocaleChange(event: Event) {
       class="brand-button"
       type="button"
       :aria-label="t('app.home')"
-      @click="$emit('navigate', '/merchants')"
+      @click="$emit('navigate', homePath())"
     >
       {{ t('app.brand') }}
     </button>

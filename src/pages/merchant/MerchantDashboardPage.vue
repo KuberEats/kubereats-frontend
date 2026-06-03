@@ -142,7 +142,15 @@ async function handleAddItem() {
   }
 }
 
+function toggleAddForm() {
+  showAddForm.value = !showAddForm.value
+  if (showAddForm.value) {
+    editingId.value = null
+  }
+}
+
 function startEdit(item: MenuItem) {
+  showAddForm.value = false
   editingId.value = item.id
   editItem.value = {
     itemName: item.itemName,
@@ -161,6 +169,11 @@ function startEdit(item: MenuItem) {
     servingSize: item.servingSize ?? '',
     ingredients: item.ingredients ?? '',
   }
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editItem.value = createEmptyMenuForm()
 }
 
 async function handleImageSelect(event: Event, target: 'new' | 'edit') {
@@ -191,7 +204,7 @@ async function handleUpdateItem(menuId: number) {
     const updated = await updateMenuItem(menuId, normalizeMenuForm(editItem.value))
     const idx = menuItems.value.findIndex(m => m.id === menuId)
     if (idx !== -1) menuItems.value[idx] = updated
-    editingId.value = null
+    cancelEdit()
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : '更新失敗'
   }
@@ -287,7 +300,7 @@ async function handleDeleteItem() {
           <button
             class="btn-small"
             data-testid="merchant-add-menu-toggle"
-            @click="showAddForm = !showAddForm"
+            @click="toggleAddForm"
           >
             {{ showAddForm ? '取消' : '+ 新增菜品' }}
           </button>
@@ -301,10 +314,17 @@ async function handleDeleteItem() {
 
         <div
           v-if="showAddForm"
-          class="card add-form"
+          class="card menu-form-card add-form"
           data-testid="merchant-add-menu-form"
         >
-          <div class="form-row">
+          <div class="menu-form-header">
+            <div>
+              <h4>新增菜品</h4>
+              <p>設定價格、每日供應量、飲食標示與圖片，員工會在訂餐頁看到這些資訊。</p>
+            </div>
+          </div>
+
+          <div class="menu-form-primary">
             <input
               v-model="newItem.itemName"
               data-testid="merchant-menu-name-input"
@@ -372,9 +392,10 @@ async function handleDeleteItem() {
               </label>
             </fieldset>
           </div>
-          <div class="image-row">
+          <div class="menu-image-panel">
             <label class="upload-btn">
-              {{ uploadingNew ? '上傳中…' : (newItem.imageUrl ? '更換圖片' : '上傳圖片') }}
+              <span>{{ uploadingNew ? '上傳中…' : (newItem.imageUrl ? '更換圖片' : '上傳圖片') }}</span>
+              <small>JPG、PNG、WebP</small>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -384,12 +405,16 @@ async function handleDeleteItem() {
                 @change="handleImageSelect($event, 'new')"
               >
             </label>
-            <img
+            <div
               v-if="newItem.imageUrl"
-              :src="newItem.imageUrl"
-              class="image-preview"
-              alt="菜品圖片預覽"
+              class="image-preview-frame"
             >
+              <img
+                :src="newItem.imageUrl"
+                class="image-preview"
+                alt="菜品圖片預覽"
+              >
+            </div>
           </div>
           <div class="nutrition-fields">
             <input
@@ -456,10 +481,34 @@ async function handleDeleteItem() {
           v-for="item in menuItems"
           :key="item.id"
           class="card menu-item"
+          :class="{ 'menu-item-editing': editingId === item.id }"
           :data-menu-item-name="item.itemName"
         >
           <template v-if="editingId === item.id">
-            <div class="form-row">
+            <div class="menu-form-shell edit-form">
+              <div class="menu-form-header">
+                <div>
+                  <h4>編輯菜品</h4>
+                  <p>使用與新增菜品相同的欄位，調整後儲存即可更新員工看到的菜單。</p>
+                </div>
+                <div class="menu-form-actions">
+                  <button
+                    class="btn-small btn-primary"
+                    :disabled="uploadingEdit"
+                    @click="handleUpdateItem(item.id)"
+                  >
+                    儲存
+                  </button>
+                  <button
+                    class="btn-small"
+                    @click="cancelEdit"
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+
+              <div class="menu-form-primary">
               <input
                 v-model="editItem.itemName"
                 placeholder="品名"
@@ -483,19 +532,6 @@ async function handleDeleteItem() {
                   {{ option.label }}
                 </option>
               </select>
-              <button
-                class="btn-small btn-primary"
-                :disabled="uploadingEdit"
-                @click="handleUpdateItem(item.id)"
-              >
-                儲存
-              </button>
-              <button
-                class="btn-small"
-                @click="editingId = null"
-              >
-                取消
-              </button>
             </div>
             <div class="menu-meta-fields">
               <fieldset>
@@ -527,9 +563,10 @@ async function handleDeleteItem() {
                 </label>
               </fieldset>
             </div>
-            <div class="image-row">
+            <div class="menu-image-panel">
               <label class="upload-btn">
-                {{ uploadingEdit ? '上傳中…' : (editItem.imageUrl ? '更換圖片' : '上傳圖片') }}
+                <span>{{ uploadingEdit ? '上傳中…' : (editItem.imageUrl ? '更換圖片' : '上傳圖片') }}</span>
+                <small>JPG、PNG、WebP</small>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -538,12 +575,16 @@ async function handleDeleteItem() {
                   @change="handleImageSelect($event, 'edit')"
                 >
               </label>
-              <img
+              <div
                 v-if="editItem.imageUrl"
-                :src="editItem.imageUrl"
-                class="image-preview"
-                alt="菜品圖片預覽"
+                class="image-preview-frame"
               >
+                <img
+                  :src="editItem.imageUrl"
+                  class="image-preview"
+                  alt="菜品圖片預覽"
+                >
+              </div>
             </div>
             <div class="nutrition-fields">
               <input
@@ -596,6 +637,7 @@ async function handleDeleteItem() {
                 rows="2"
                 placeholder="食材說明，例如：白飯、雞腿、青菜"
               />
+            </div>
             </div>
           </template>
           <template v-else>
@@ -661,9 +703,9 @@ async function handleDeleteItem() {
 </template>
 
 <style scoped>
-.page-container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+.page-container { max-width: 1120px; margin: 2rem auto; padding: 0 1rem; }
 .loading { text-align: center; padding: 2rem; color: #999; }
-.card { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+.card { background: #ffffff; padding: 1.25rem; border: 1px solid #ece7df; border-radius: 8px; box-shadow: 0 8px 24px rgba(17,24,39,0.08); margin-bottom: 1rem; }
 .merchant-info h2 { margin: 0 0 0.5rem; color: #333; }
 .info-grid { display: flex; flex-wrap: wrap; gap: 1rem; color: #666; font-size: 0.9rem; }
 .tags { margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -671,54 +713,211 @@ async function handleDeleteItem() {
 .status-0 { color: #f39c12; }
 .status-1 { color: #27ae60; }
 .status-2 { color: #e74c3c; }
-.notice { text-align: center; padding: 1rem; color: #999; background: #fafafa; border-radius: 8px; margin-bottom: 1rem; }
+.notice { text-align: center; padding: 1rem; color: #777; background: #fafafa; border-radius: 8px; margin-bottom: 1rem; }
 .error-notice { color: #e74c3c; background: #fdf0f0; }
-.section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-.section-header h3 { margin: 0; flex: 1; color: #333; }
-.form-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-.form-row input { flex: 1; min-width: 100px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
-.form-row select { min-width: 120px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
-.image-row { display: flex; gap: 0.75rem; align-items: center; margin-top: 0.75rem; }
-.upload-btn { display: inline-block; padding: 0.4rem 0.75rem; border: 1px dashed #bbb; border-radius: 4px; background: #fafafa; color: #555; cursor: pointer; font-size: 0.85rem; }
-.upload-btn:hover { background: #f0f0f0; border-color: #999; }
-.image-preview { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
-.menu-item-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
-.menu-item { display: flex; justify-content: space-between; align-items: center; }
-.menu-item-info { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-.menu-item-actions { display: flex; gap: 0.5rem; }
-.menu-meta-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 0.75rem; }
-.menu-meta-fields fieldset { border: 1px solid #ddd; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.75rem; }
-.menu-meta-fields legend { color: #555; font-size: 0.85rem; font-weight: 700; padding: 0 0.25rem; }
-.menu-meta-fields label { display: inline-flex; align-items: center; gap: 0.25rem; color: #555; font-size: 0.85rem; }
-.nutrition-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.75rem; }
+.section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.section-header h3 { margin: 0; flex: 1; color: #333; font-size: 1.35rem; }
+
+.menu-form-card,
+.menu-item-editing {
+  display: grid;
+  gap: 1rem;
+}
+
+.menu-form-shell {
+  display: grid;
+  width: 100%;
+  gap: 1rem;
+}
+
+.menu-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #f0ebe4;
+  padding-bottom: 0.85rem;
+}
+
+.menu-form-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1.05rem;
+}
+
+.menu-form-header p {
+  margin: 0.25rem 0 0;
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.menu-form-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+.menu-form-primary {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(120px, 1fr) minmax(140px, 1fr) minmax(150px, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.menu-form-primary input,
+.menu-form-primary select,
 .nutrition-fields input,
-.nutrition-fields textarea { min-width: 0; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; }
-.nutrition-fields textarea { grid-column: span 2; resize: vertical; }
+.nutrition-fields textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d8d2c8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.95rem;
+}
+
+.menu-form-primary input:focus,
+.menu-form-primary select:focus,
+.nutrition-fields input:focus,
+.nutrition-fields textarea:focus {
+  outline: 2px solid rgba(249, 115, 22, 0.22);
+  border-color: #f97316;
+}
+
+.menu-meta-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.menu-meta-fields fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 0.65rem 0.75rem;
+  min-width: 0;
+  border: 1px solid #ddd6cc;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.menu-meta-fields legend {
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 0 0.35rem;
+}
+
+.menu-meta-fields label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.menu-meta-fields input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #f97316;
+}
+
+.menu-image-panel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 96px;
+}
+
+.upload-btn {
+  display: grid;
+  min-width: 160px;
+  min-height: 82px;
+  place-items: center;
+  border: 1px dashed #bbb3a7;
+  border-radius: 8px;
+  background: #fffaf5;
+  color: #374151;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+
+.upload-btn small {
+  color: #8a8178;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.upload-btn:hover { background: #fff4e8; border-color: #f97316; }
+.image-preview-frame { border: 1px solid #eee4d8; border-radius: 8px; padding: 0.35rem; background: #ffffff; }
+.image-preview { display: block; width: 88px; height: 88px; object-fit: cover; border-radius: 6px; }
+
+.nutrition-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.nutrition-fields textarea {
+  grid-column: span 2;
+  min-height: 90px;
+  resize: vertical;
+}
+
+.menu-item-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+.menu-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1rem; }
+.menu-item-info { display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap; min-width: 0; }
+.menu-item-info strong { font-size: 1rem; color: #1f2937; }
+.menu-item-info > span { color: #555; font-size: 0.9rem; }
+.menu-item-actions { display: flex; gap: 0.5rem; }
 .menu-badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.menu-badges span { background: #f0f0f0; border-radius: 4px; color: #666; font-size: 0.78rem; padding: 0.18rem 0.45rem; }
-.btn-primary { background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 0.4rem 0.75rem; }
-.btn-primary:hover { background: #c0392b; }
-.btn-small { padding: 0.4rem 0.75rem; border: 1px solid #ddd; border-radius: 4px; background: white; color: #333; cursor: pointer; font-size: 0.85rem; }
-.btn-small:hover { background: #f5f5f5; }
-.btn-secondary { background: #3498db; color: white; border: none; }
-.btn-secondary:hover { background: #2980b9; }
-.btn-danger { background: #e74c3c; color: white; border: none; }
-.btn-danger:hover { background: #c0392b; }
+.menu-badges span { background: #f3f4f6; border-radius: 6px; color: #666; font-size: 0.78rem; padding: 0.22rem 0.5rem; }
+.btn-primary { background: #f97316; color: white; border: none; border-radius: 8px; cursor: pointer; padding: 0.65rem 1rem; }
+.btn-primary:hover { background: #ea580c; }
+.btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
+.btn-small { padding: 0.65rem 0.9rem; border: 1px solid #d8d2c8; border-radius: 8px; background: white; color: #333; cursor: pointer; font-size: 0.9rem; font-weight: 800; }
+.btn-small:hover { background: #f7f3ef; }
+.btn-secondary { background: #4f93d2; color: white; border: none; }
+.btn-secondary:hover { background: #367ec0; }
+.btn-danger { background: #dc2626; color: white; border: none; }
+.btn-danger:hover { background: #b91c1c; }
 .finance-actions { display: flex; gap: 1rem; margin-bottom: 1rem; }
 .finance-btn { display: flex; align-items: center; gap: 0.75rem; flex: 1; padding: 1rem; background: white; border: 1px solid #eee; border-radius: 8px; cursor: pointer; font-size: 0.95rem; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: border-color 0.2s; }
 .finance-btn:hover { border-color: #f97316; }
 .finance-btn-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; color: #f97316; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
 .error-text { color: #e74c3c; font-size: 0.875rem; }
 
+@media (max-width: 980px) {
+  .menu-form-primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .menu-form-primary input:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .menu-form-primary .btn-primary {
+    justify-self: start;
+  }
+}
+
 @media (max-width: 640px) {
   .page-container { margin: 1rem auto; }
   .section-header { align-items: stretch; flex-direction: column; }
   .finance-actions { flex-direction: column; }
-  .form-row { flex-direction: column; align-items: stretch; }
-  .form-row input,
-  .form-row select,
-  .form-row button { width: 100%; }
+  .menu-form-header,
+  .menu-image-panel { align-items: stretch; flex-direction: column; }
+  .menu-form-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .menu-form-primary { grid-template-columns: 1fr; }
+  .menu-form-primary input:first-child { grid-column: auto; }
+  .menu-form-primary .btn-primary { justify-self: stretch; }
   .menu-meta-fields { grid-template-columns: 1fr; }
+  .menu-meta-fields fieldset { grid-template-columns: 1fr; }
   .nutrition-fields { grid-template-columns: 1fr; }
   .nutrition-fields textarea { grid-column: auto; }
   .menu-item { align-items: stretch; flex-direction: column; gap: 0.75rem; }

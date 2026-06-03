@@ -43,6 +43,27 @@ const approvedMerchant = {
 }
 
 const imageUrl = 'https://storage.googleapis.com/kubereats-menu-images/1/abc.jpg'
+const existingMenuItem = {
+  id: 42,
+  merchantId: 1,
+  itemName: '豬排',
+  price: 100,
+  maxDailyQuantity: 100,
+  dietaryType: 'MEAT',
+  allergens: ['蛋'],
+  certifications: ['SGS'],
+  imageUrl,
+  caloriesKcal: 650,
+  proteinG: 30,
+  carbsG: 80,
+  fatG: 20,
+  sodiumMg: 700,
+  sugarG: 5,
+  servingSize: '1 份 / 350g',
+  ingredients: '白飯、豬排、高麗菜',
+  createdAt: '2026-06-02T00:00:00Z',
+  updatedAt: '2026-06-02T00:00:00Z',
+}
 
 beforeEach(() => {
   Object.values(mocks).forEach(fn => fn.mockReset())
@@ -112,5 +133,22 @@ describe('MerchantDashboardPage image upload', () => {
 
     expect(wrapper.get('.error-text').text()).toContain('圖片格式不支援')
     expect(wrapper.find('.add-form .image-preview').exists()).toBe(false)
+  })
+
+  it('uses the expanded menu form layout when editing an item', async () => {
+    mocks.listMenuItems.mockResolvedValue([existingMenuItem])
+
+    const wrapper = mount(MerchantDashboardPage)
+    await flushPromises()
+
+    const editButton = wrapper.findAll('button').find(button => button.text() === '編輯')
+    expect(editButton).toBeTruthy()
+    await editButton!.trigger('click')
+
+    expect(wrapper.find('.menu-item-editing .edit-form').exists()).toBe(true)
+    expect(wrapper.find('.menu-item-editing .menu-form-primary').exists()).toBe(true)
+    expect(wrapper.find('.menu-item-editing .menu-meta-fields').exists()).toBe(true)
+    expect(wrapper.find('.menu-item-editing .nutrition-fields').exists()).toBe(true)
+    expect(wrapper.find('.menu-item-editing .image-preview').attributes('src')).toBe(imageUrl)
   })
 })

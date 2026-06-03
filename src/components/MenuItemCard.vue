@@ -57,7 +57,7 @@ const imageAlt = computed(() => `${props.item.itemName} 圖片`)
 <template>
   <article
     class="menu-item-card"
-    :class="{ unavailable: isUnavailable }"
+    :class="{ unavailable: isUnavailable, 'has-image': item.imageUrl }"
     :data-testid="`menu-item-${item.id}`"
     :data-menu-item-name="item.itemName"
   >
@@ -127,6 +127,23 @@ const imageAlt = computed(() => `${props.item.itemName} 圖片`)
 </template>
 
 <style scoped>
+@media (min-width: 641px) {
+  .menu-item-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-content: stretch;
+  }
+
+  .menu-item-card.has-image {
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+  }
+
+  .icon-text-button,
+  :deep(.quantity-stepper) {
+    justify-self: end;
+  }
+}
+
 .menu-item-image {
   width: 96px;
   height: 96px;
