@@ -23,55 +23,18 @@ const sortOptions: { labelKey: MessageKey; value: MerchantSortOption }[] = [
 
 const selectedCampus = ref<Campus>('竹科')
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
-const selectedSort = ref<MerchantSortOption>('people')
-const selectedFilter = ref('all')
-const searchQuery = ref('')
+const selectedSort = ref<MerchantSortOption>('recommend')
 const merchants = ref<Merchant[]>([])
 const isLoading = ref(false)
 const isRecommendationLoading = ref(false)
 const errorMessage = ref('')
 const recommendationPrompt = ref('')
 const lastRecommendationPrompt = ref('')
-const isRecommendationDialogOpen = ref(false)
+const isRecommendationDialogOpen = ref(true)
 const isRecommendationMode = ref(false)
 
-const categoryFilters = computed(() => {
-  const categories = new Set(merchants.value.map(merchant => merchant.category).filter(Boolean))
-  return Array.from(categories).slice(0, 6)
-})
-
-const filterChips = computed(() => [
-  { label: t('merchantList.filter.all'), value: 'all' },
-  { label: t('merchantList.filter.open'), value: 'open' },
-  { label: t('merchantList.filter.hot'), value: 'hot' },
-  ...categoryFilters.value.map(category => ({ label: category, value: category })),
-])
-
 const visibleMerchants = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase()
-
-  return merchants.value
-    .filter(merchant => {
-      if (selectedFilter.value === 'open' && merchant.isOpen === false) return false
-      if (selectedFilter.value === 'hot' && (merchant.orderCount ?? 0) < 50) return false
-      if (
-        selectedFilter.value !== 'all' &&
-        selectedFilter.value !== 'open' &&
-        selectedFilter.value !== 'hot' &&
-        merchant.category !== selectedFilter.value
-      ) {
-        return false
-      }
-
-      if (!query) return true
-      const searchable = [
-        merchant.name,
-        merchant.category,
-        merchant.campus,
-        merchant.reason,
-      ].join(' ').toLowerCase()
-      return searchable.includes(query)
-    })
+  return [...merchants.value]
     .sort((a, b) => {
       if (selectedSort.value === 'leastPeople') {
         return (a.orderCount ?? 0) - (b.orderCount ?? 0)
@@ -107,11 +70,6 @@ function selectSort(sort: MerchantSortOption) {
     isRecommendationDialogOpen.value = true
     errorMessage.value = ''
   }
-}
-
-function clearFilters() {
-  searchQuery.value = ''
-  selectedFilter.value = 'all'
 }
 
 function closeRecommendationDialog() {
@@ -198,33 +156,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
       </button>
     </section>
 
-    <section class="search-panel">
-      <label class="search-box">
-        <span class="sr-only">{{ t('merchantList.search') }}</span>
-        <input
-          v-model="searchQuery"
-          type="search"
-          :placeholder="t('merchantList.searchPlaceholder')"
-          :aria-label="t('merchantList.search')"
-        >
-      </label>
-
-      <div
-        class="filter-bar compact"
-        aria-label="快速篩選"
-      >
-        <button
-          v-for="chip in filterChips"
-          :key="chip.value"
-          class="pill-button"
-          :class="{ active: selectedFilter === chip.value }"
-          type="button"
-          @click="selectedFilter = chip.value"
-        >
-          {{ chip.label }}
-        </button>
-      </div>
-
+    <section class="recommendation-controls">
       <div
         class="filter-bar compact"
         aria-label="排序"
@@ -233,7 +165,7 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
           v-for="option in sortOptions"
           :key="option.value"
           class="pill-button"
-          :class="{ active: selectedSort === option.value }"
+          :class="{ active: selectedSort === option.value, featured: option.value === 'recommend' }"
           type="button"
           :aria-label="`排序：${t(option.labelKey)}`"
           @click="selectSort(option.value)"
@@ -294,8 +226,8 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
       icon="?"
       :title="t('merchantList.emptyTitle')"
       :description="t('merchantList.emptyDescription')"
-      :action-label="t('merchantList.clearFilters')"
-      @action="clearFilters"
+      :action-label="t('merchantList.askRecommend')"
+      @action="isRecommendationDialogOpen = true"
     />
 
     <div
@@ -354,22 +286,15 @@ watch([selectedCampus, selectedDate, selectedSort], fetchMerchants)
 </template>
 
 <style scoped>
-.search-panel {
+.recommendation-controls {
   display: grid;
   gap: 12px;
   margin: 16px 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  padding: 14px;
 }
 
-.search-box input {
-  width: 100%;
-  min-height: 46px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
+.pill-button.featured {
+  border-color: #f97316;
+  font-weight: 800;
 }
 
 .merchant-list {

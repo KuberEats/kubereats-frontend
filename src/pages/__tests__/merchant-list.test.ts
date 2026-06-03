@@ -49,48 +49,38 @@ beforeEach(() => {
 })
 
 describe('MerchantListPage', () => {
-  it('shows loading skeleton while fetching', async () => {
+  it('opens system recommendation by default', async () => {
+    mocks.listMerchants.mockResolvedValue(merchants)
+
+    const wrapper = mount(MerchantListPage)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('想吃什麼？')
+    expect(wrapper.find('input[type="search"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('營業中')
+    expect(wrapper.text()).not.toContain('熱門')
+  })
+
+  it('shows loading skeleton while fetching merchants after leaving recommendation', async () => {
     mocks.listMerchants.mockReturnValue(new Promise(() => {}))
 
     const wrapper = mount(MerchantListPage)
-    await wrapper.vm.$nextTick()
+    await wrapper.get('button[aria-label="排序：最多人美食"]').trigger('click')
 
     expect(wrapper.text()).toContain('竹科 今日訂餐')
     expect(wrapper.findAll('.loading-row').length).toBeGreaterThan(0)
   })
 
-  it('filters merchants by search text', async () => {
-    mocks.listMerchants.mockResolvedValue(merchants)
+  it('shows empty state and can reopen recommendation', async () => {
+    mocks.listMerchants.mockResolvedValue([])
     const wrapper = mount(MerchantListPage)
+    await wrapper.get('button[aria-label="排序：最多人美食"]').trigger('click')
     await flushPromises()
 
-    await wrapper.get('input[type="search"]').setValue('咖哩')
-
-    expect(wrapper.text()).toContain('小森咖哩')
-    expect(wrapper.text()).not.toContain('阿明便當')
-  })
-
-  it('does not search merchant tags', async () => {
-    mocks.listMerchants.mockResolvedValue(merchants)
-    const wrapper = mount(MerchantListPage)
-    await flushPromises()
-
-    await wrapper.get('input[type="search"]').setValue('雞腿飯')
-
-    expect(wrapper.text()).toContain('找不到符合條件的商家')
-    expect(wrapper.text()).not.toContain('阿明便當')
-  })
-
-  it('shows empty state and clears filters', async () => {
-    mocks.listMerchants.mockResolvedValue(merchants)
-    const wrapper = mount(MerchantListPage)
-    await flushPromises()
-
-    await wrapper.get('input[type="search"]').setValue('不存在')
     expect(wrapper.text()).toContain('找不到符合條件的商家')
 
     await wrapper.get('.empty-state-panel button').trigger('click')
-    expect(wrapper.text()).toContain('阿明便當')
+    expect(wrapper.text()).toContain('想吃什麼？')
   })
 
   it('sorts least ordered merchants locally', async () => {
@@ -110,6 +100,7 @@ describe('MerchantListPage', () => {
       .mockRejectedValueOnce(new Error('API down'))
       .mockResolvedValueOnce(merchants)
     const wrapper = mount(MerchantListPage)
+    await wrapper.get('button[aria-label="排序：最多人美食"]').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('API down')
