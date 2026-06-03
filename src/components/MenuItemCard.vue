@@ -105,6 +105,7 @@ const imageAlt = computed(() => `${props.item.itemName} 圖片`)
 
     <QuantityStepper
       v-if="quantity > 0"
+      class="menu-item-action"
       :model-value="quantity"
       :min="0"
       :max="item.maxDailyQuantity || 99"
@@ -114,7 +115,7 @@ const imageAlt = computed(() => `${props.item.itemName} 圖片`)
     />
     <button
       v-else
-      class="icon-text-button"
+      class="icon-text-button menu-item-action"
       type="button"
       data-testid="add-menu-item-button"
       :disabled="isUnavailable"
@@ -138,8 +139,7 @@ const imageAlt = computed(() => `${props.item.itemName} 圖片`)
     grid-template-columns: 96px minmax(0, 1fr) auto;
   }
 
-  .icon-text-button,
-  :deep(.quantity-stepper) {
+  .menu-item-action {
     justify-self: end;
   }
 }
