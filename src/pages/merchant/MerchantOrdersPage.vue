@@ -137,6 +137,9 @@ async function handleConfirmToday() {
         v-else
         class="orders-table"
       >
+        <caption class="sr-only">
+          今日訂單彙整，包含品項、訂購數量與金額。
+        </caption>
         <thead>
           <tr>
             <th>品項</th>

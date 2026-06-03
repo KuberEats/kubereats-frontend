@@ -192,6 +192,9 @@ async function handleGenerateReport() {
           <h3>撥款紀錄</h3>
         </div>
         <table class="data-table">
+          <caption class="sr-only">
+            撥款紀錄，包含訂單編號、撥款金額與目前處理狀態。
+          </caption>
           <thead>
             <tr>
               <th>訂單編號</th>

@@ -58,6 +58,7 @@ const count = ref(0)
           <a
             href="https://vite.dev/"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <img
               class="logo"
@@ -71,6 +72,7 @@ const count = ref(0)
           <a
             href="https://vuejs.org/"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <img
               class="button-icon"
@@ -97,6 +99,7 @@ const count = ref(0)
           <a
             href="https://github.com/vitejs/vite"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <svg
               class="button-icon"
@@ -112,6 +115,7 @@ const count = ref(0)
           <a
             href="https://chat.vite.dev/"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <svg
               class="button-icon"
@@ -127,6 +131,7 @@ const count = ref(0)
           <a
             href="https://x.com/vite_js"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <svg
               class="button-icon"
@@ -142,6 +147,7 @@ const count = ref(0)
           <a
             href="https://bsky.app/profile/vite.dev"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <svg
               class="button-icon"

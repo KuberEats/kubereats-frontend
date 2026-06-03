@@ -123,6 +123,9 @@ async function handleGenerateBarcode() {
           <h3>薪資扣款明細</h3>
         </div>
         <table class="data-table">
+          <caption class="sr-only">
+            薪資扣款明細，包含訂單編號、扣款金額與訂單時間。
+          </caption>
           <thead>
             <tr>
               <th>訂單編號</th>
